@@ -1,6 +1,14 @@
 name: deploy
 
-on: [workflow_dispatch]
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - '.github/workflows/*'
+      - 'deploy/**'
+
+concurrency: 'main'
 
 env:
   AZURE_RESOURCEGROUP_NAME: squarity
