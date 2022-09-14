@@ -1,4 +1,4 @@
-var location = resourceGroup().id
+var location = resourceGroup().name
 
 module appService 'modules/appService.bicep' = {
   name: 'AppService'
