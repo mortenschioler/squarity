@@ -1,4 +1,4 @@
-var location = resourceGroup().name
+param location string = resourceGroup().location
 
 module appService 'modules/appService.bicep' = {
   name: 'AppService'
