@@ -2,7 +2,7 @@
 > ⚠️ This application is still in pre-release, i.e. it is not yet available in a finished state.
 
 ## Frameworks and technology
-squarity is a Single Page Application (SPA) written in ClojureScript and uses Reagent and Re-Frame compiled with shadow-cljs through npm (requires `java`). TailwindCSS is used for CSS. It is a pure front-end application.
+Squarity is a Single Page Application (SPA) written in ClojureScript that uses Reagent and Re-Frame, compiled with shadow-cljs. Tailwind is used for CSS. There is no backend.
 
 The application is hosted on Azure, in a personal Free tier account belonging to @mortenschioler. Continuous deployment is set up using GitHub Actions. The GitHub Actions workflow is defined in `.github/workflows/workflow.yml`.
 
@@ -36,19 +36,19 @@ This operation creates a `.shadow-cljs` folder in the project folder.
 > Skipping the build step altogether with `skip_app_build: true` creates problems due to consequential assumptions made by the action about the location of the output assets. As a workaround,
 > the in-container build step is retained, but the app compilation step, which is usually `npm run build`, is stubbed for the no-op app compilation step `build:azure`. The build artifacts were already packed into the container on startup, after the real build ran in the parent process.
 
-### Serve Your App Build Locally
+### Serve The App Build Locally
 
-This will serve the finished build (from doing a production build via `npm run build`) on [http://localhost:5000](http://localhost:5000) in your browser.
+This will serve the finished build (from doing a production build via `npm run build`) on [http://localhost:5000](http://localhost:5000) in the browser.
 
 ```
 npm run serve
 ```
 
-You don't need to do this if you have started the application in dev mode with `npm start` or `npm run watch`, but it can be useful for inspecting the result of a production build locally.
+It's not necessary to do this if the application was started in dev mode with `npm start` or `npm run watch`, but it can be useful for inspecting the result of a production build locally.
 
 ### Connect to a Build-specific Browser REPL
 
-From a different Terminal, connect to a browser REPL for your specific build (only available while `yarn start` or `npm start` is running, that is, Shadow-CLJS is “watching” your code for changes). Note also that your build must be running in the browser (`localhost:3000`).
+From a different Terminal, connect to a browser REPL for the specific build (only available while `yarn start` or `npm start` is running, that is, Shadow-CLJS is “watching” the code for changes). Note also that the build must be running in the browser (`localhost:3000`).
 
 See [this section](https://shadow-cljs.github.io/docs/UsersGuide.html#build-repl) of the Shadow-CLJS documentation for more details.
 
@@ -58,7 +58,7 @@ npm run repl
 
 ### Connect to a Blank Browser REPL
 
-This starts a blank CLJS REPL and will open an associated browser window where the code will execute. It is not connected to any specific build target. Since it is not connected to any build it does not do any automatic rebuilding of code when your files change and does not provide hot-reload. If you close the browser window the REPL will stop working.
+This starts a blank CLJS REPL and will open an associated browser window where the code will execute. It is not connected to any specific build target. Since it is not connected to any build it does not do any automatic rebuilding of code when files change and does not provide hot-reload. If you close the browser window the REPL will stop working.
 
 See [this section](https://shadow-cljs.github.io/docs/UsersGuide.html#browser-repl) of the Shadow-CLJS documentation for more details.
 
