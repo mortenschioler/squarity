@@ -1,7 +1,19 @@
 tasks:
-  - init: npm install
-    command: npm start
+  - init: |
+      npm install
+  - command: |
+      npm start
+github:
+  prebuilds:
+    main: true
 # Ports to expose on workspace startup
 ports:
   - port: 3000
     onOpen: notify
+  - port: 3021
+    onOpen: ignore
+  - port: 9630
+    onOpen: ignore
+vscode:
+  extensions:
+    - betterthantomorrow.calva
