@@ -1,18 +1,25 @@
 # `squarity`: A simple chess vision trainer
-> :warning: This application is still in pre-release.
+> ⚠️ This application is still in pre-release, i.e. it is not yet available in a finished state.
 
-## Available Scripts
+## Frameworks and technology
+squarity is a Single Page Application (SPA) written in ClojureScript and uses Reagent and Re-Frame compiled with shadow-cljs through npm (requires `java`). TailwindCSS is used for CSS. It is a pure front-end application.
+
+The application is hosted on Azure, in a personal Free tier account belonging to @mortenschioler. Continuous deployment is set up using GitHub Actions. The GitHub Actions workflow is defined in `.github/workflows/workflow.yml`.
+
+The application can be accessed at https://gray-bush-02ba41903.1.azurestaticapps.net/. A nicer subdomain name is TODO.
+
+## Node Scripts
 
 ### Start App
 
-This will compile the app in development mode, and watch for any changes in your code.
+This will compile the app in development mode, and watch for any changes in the code and Tailwind classes.
 Open [http://localhost:3000](http://localhost:3000) to view the app in the browser.
 
 ```
 npm start
 ```
 
-This operation creates a `.shadow-cljs` folder in your project folder.
+This operation creates a `.shadow-cljs` folder in the project folder.
 
 ### Build Release Version of App
 
@@ -22,41 +29,22 @@ This compiles the app in production mode, using `:advanced` compilation settings
 npm run build
 ```
 
-This operation creates a `.shadow-cljs` folder in your project folder.
+This operation creates a `.shadow-cljs` folder in the project folder.
 
-### Debug Release Version of App
-
-Sometimes you may run into some release issues due to `:advanced` compilation. The following command may help you track down the causes:
-
-```
-npm run debug-build
-```
-
-### Show Detailed Build Report of Release Version of App
-
-A detailed build report will be shown in your CLI, and a `report.html` file will be created in your project folder.
-
-```
-npm run report
-```
+> ⚠️ Note that the production build in the pipeline is performed directly in the GitHub Runner instead of inside the Action `Azure/static-web-apps-deploy@v1` because the latter
+> runs in a container that does not have Java installed, which is required for ClojureScript compilation (since the ClojureScript compiler is written in Clojure hosted on the JVM). 
+> Skipping the build step altogether with `skip_app_build: true` creates problems due to consequential assumptions made by the action about the location of the output assets. As a workaround,
+> the in-container build step is retained, but the app compilation step, which is usually `npm run build`, is stubbed for the no-op app compilation step `build:azure`. The build artifacts were already packed into the container on startup, after the real build ran in the parent process.
 
 ### Serve Your App Build Locally
 
-This will serve your finished build (from doing a production build via `yarn build` or `npm run build`, or from doing a development build via `yarn devbuild` or `npm run devbuild`) on [http://localhost:5000](http://localhost:5000) in your browser.
+This will serve the finished build (from doing a production build via `npm run build`) on [http://localhost:5000](http://localhost:5000) in your browser.
 
 ```
 npm run serve
 ```
 
-### Build Development Version of App
-
-This compiles the app in developent mode once and then exits. The finished build will be in the `public` folder. This command does _not_ watch your code for changes (use `yarn start` or `npm start` to build the app in development mode _and_ watch for changes).
-
-```
-npm run dev-build
-```
-
-This operation creates a `.shadow-cljs` folder in your project folder.
+You don't need to do this if you have started the application in dev mode with `npm start` or `npm run watch`, but it can be useful for inspecting the result of a production build locally.
 
 ### Connect to a Build-specific Browser REPL
 
@@ -88,26 +76,6 @@ See [this section](https://shadow-cljs.github.io/docs/UsersGuide.html#_clojure_r
 npm run clojure-repl
 ```
 
-### Compile tests and watch for changes
-
-(Run in a separate Terminal.) This runs the tests and watches them for changes, re-running when a change is detected.
-
-```
-npm test
-```
-
-Note: Creates an `out` folder in your project folder, containing a `node-tests.js` file.
-
-### Compile tests and run them once
-
-(Run in a separate Terminal.) This runs the tests once and then exits. This command does _not_ watch your tests for changes (use `npm test` to run tests _and_ watch for changes).
-
-```
-npm run test-once
-```
-
-Note: Creates an `out` folder in your project folder.
-
 ### Remove Generated JS Code (“Clean”)
 
 Remove (“clean”) the `public/js` folder and contents generated during compilation.
@@ -138,9 +106,3 @@ Note that after this operation you will need to run `npm install` again before s
 Shadow-CLJS can be fairly slow to start. To improve this Shadow-CLJS can run in “server mode” which means that a dedicated process is started which all other commands can use to execute a lot faster since they won’t have to start a new JVM/Clojure instance.
 
 You can run the process in the foreground in a dedicated Terminal. Use CTRL+C to terminate the server.
-
-## CI/CD
-:warning: The below information is currently out-of-date due to reconstruction of the pipeline.
-The application is hosted on Azure, in a personal Free tier account belonging to @mortenschioler. Continuous deployment is set up using GitHub Actions. The GitHub Actions workflow is defined in `.github/workflows/workflow.yml`. The GitHub-hosted runner authenticates as an Azure AD Managed Identity called a "Workload Identity" that was created manually using the commands documented in the script `/bin/create-workload-identity`. The hosted runner obtains credentials via GitHub secrets, which were added manually to the repository Actions Secrets to match the workload identity's Federated Credentials.
-
-The pipeline runs automatically on when relevant changes are made to  `main` branch. There is currently only one environment; we test in production 🤯🔫. 
