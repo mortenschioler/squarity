@@ -6,7 +6,7 @@
     "start": "shadow-cljs watch app",
     "watch-all": "shadow-cljs watch app test-browser",
     "build": "shadow-cljs release app",
-    "build:azure": "sudo apt-get install --assume-yes -q openjdk-11-jdk && npm run build",
+    "build:azure": "apt-get install --assume-yes -q openjdk-11-jdk && npm run build",
     "build-verbose": "shadow-cljs release --verbose app",
     "report": "shadow-cljs run shadow.cljs.build-report app report.html",
     "debug-build": "shadow-cljs release app --debug",
