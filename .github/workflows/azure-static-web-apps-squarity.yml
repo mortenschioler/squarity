@@ -18,8 +18,6 @@ jobs:
       - uses: actions/checkout@v2
         with:
           submodules: true
-      - name: Install non-node dependencies
-        run: sudo apt install openjdk-8-jdk
       - name: Build And Deploy
         id: builddeploy
         uses: Azure/static-web-apps-deploy@v1
@@ -27,10 +25,11 @@ jobs:
           azure_static_web_apps_api_token: ${{ secrets.AZURE_STATIC_WEB_APPS_API_TOKEN_GRAY_BUSH_02BA41903 }}
           repo_token: ${{ secrets.GITHUB_TOKEN }} # Used for Github integrations (i.e. PR comments)
           action: "upload"
+          app_build_command: "sudo apt install openjdk-11-jdk && npm run build"
           ###### Repository/Build Configurations - These values can be configured to match your app requirements. ######
           # For more information regarding Static Web App workflow configurations, please visit: https://aka.ms/swaworkflowconfig
           app_location: "/" # App source code path
-          api_location: "" # Api source code path - optional
+          skip_api_build: true;
           output_location: "public" # Built app content directory - optional
           ###### End of Repository/Build Configurations ######
 
