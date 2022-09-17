@@ -1,6 +1,5 @@
 {:source-paths
- ["src/main"
-  "src/test"]
+ ["src/main"]
 
  :dependencies
  [[reagent            "1.0.0"]
@@ -15,4 +14,4 @@
    :output-dir "public/js"
    :asset-path "/js"
    :modules    {:main
-                {:init-fn foo.app.core/main}}}}}
+                {:init-fn squarity.app.core/main}}}}}

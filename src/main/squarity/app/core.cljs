@@ -1,10 +1,10 @@
-(ns foo.app.core
+(ns squarity.app.core
   (:require [reagent.dom :as rdom]))
 
 (defn app
   []
   [:div
-   [:h1 "Squarity"]])
+   [:h1 "Squarity!"]])
 
 (defn render 
   []
