@@ -1,10 +1,12 @@
 (ns squarity.app.core
-  (:require [reagent.dom :as rdom]))
+  (:require [reagent.dom :as rdom]
+            [squarity.app.mainpage :as mainpage]))
 
 (defn app
   []
   [:div
-   [:h1 "Squarity!"]])
+   [:h1 "Squarity!"]
+   mainpage/board-colored])
 
 (defn render 
   []
