@@ -25,7 +25,7 @@ jobs:
       - name: Deps
         run: npm install
       - name: Build
-        run: npm run build # <- ClojureScript compilation with shadow-cljs, which is what requires java
+        run: npm run release # <- ClojureScript compilation with shadow-cljs, which is what requires java
       - name: Deploy
         id: builddeploy
         uses: Azure/static-web-apps-deploy@v1
