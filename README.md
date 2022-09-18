@@ -1,6 +1,9 @@
 # `squarity`: A simple chess vision trainer
 > ⚠️ This application is still in pre-release, i.e. it is not yet available in a finished state.
 
+## Gitpod
+[![Open in Gitpod](https://gitpod.io/button/open-in-gitpod.svg)](https://gitpod.io/#https://github.com/mortenschioler/squarity.git)
+
 ## Frameworks and technology
 Squarity is a Single Page Application (SPA) written in ClojureScript that uses Reagent and Re-Frame, compiled with shadow-cljs. Tailwind is used for CSS. There is no backend.
 
