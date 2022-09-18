@@ -1,5 +1,5 @@
 (ns squarity.app.pages.main
-  (:require [squarity.app.db :as db]))
+  (:require [re-frame.core :as re-frame]))
 
 (def urls
   {:colored "url(img/board_colored.svg)"
@@ -15,12 +15,12 @@
 (defn board-container
   [board-visibility]
   [:div {:class "w-96 h-96"
-         :on-click #(swap! db/db update :board-visibility (fn [s] (case s :colored :blank :blank :colored)))}
+         :on-click #(re-frame/dispatch [:swap-board-color])}
    [board board-visibility]])
 
 (defn main
   []
   (fn []
-    (let [{:keys [board-visibility]} @db/db]
+    (let [board-visibility @(re-frame/subscribe [:board-visibility])]
       [board-container 
        board-visibility])))
