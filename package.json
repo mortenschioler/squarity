@@ -4,6 +4,7 @@
   "private": true,
   "scripts": {
     "start": "npm run watch",
+    "dev": "npm run watch",
     "watch": "run-p watch:app watch:css",
     "watch:app": "shadow-cljs watch app",
     "watch:css": "npx tailwindcss -i ./public/css/style.css -o ./public/css/tailwind.css --watch",
