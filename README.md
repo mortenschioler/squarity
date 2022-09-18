@@ -19,7 +19,7 @@ This will compile the app in development mode, and watch for any changes in the 
 Open [http://localhost:3000](http://localhost:3000) to view the app in the browser.
 
 ```
-npm start
+npm run dev
 ```
 
 This operation creates a `.shadow-cljs` folder in the project folder.
@@ -29,7 +29,7 @@ This operation creates a `.shadow-cljs` folder in the project folder.
 This compiles the app in production mode, using `:advanced` compilation settings. The finished build (under `public/js`) will be in the `public` folder, which can be deployed.
 
 ```
-npm run build
+npm run release
 ```
 
 This operation creates a `.shadow-cljs` folder in the project folder.
