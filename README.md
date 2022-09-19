@@ -36,8 +36,7 @@ This operation creates a `.shadow-cljs` folder in the project folder.
 
 > ⚠️ Note that the production build in the pipeline is performed directly in the GitHub Runner instead of inside the Action `Azure/static-web-apps-deploy@v1` because the latter
 > runs in a container that does not have Java installed, which is required for ClojureScript compilation (since the ClojureScript compiler is written in Clojure hosted on the JVM). 
-> Skipping the build step altogether with `skip_app_build: true` creates problems due to consequential assumptions made by the action about the location of the output assets. As a workaround,
-> the in-container build step is retained, but the app compilation step, which is usually `npm run build`, is stubbed for the no-op app compilation step `build:azure`. The build artifacts were already packed into the container on startup, after the real build ran in the parent process.
+>  The build artifacts are already packed into the container from the runner on startup, after the build ran in the parent process.
 
 ### Serve The App Build Locally
 

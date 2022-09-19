@@ -23,7 +23,7 @@ jobs:
           submodules: true
         # Building outside the container is necessary because java is required
       - name: Deps
-        run: npm install
+        run: npm ci
       - name: Build
         run: npm run release # <- ClojureScript compilation with shadow-cljs, which is what requires java
       - name: Deploy
@@ -33,12 +33,10 @@ jobs:
           azure_static_web_apps_api_token: ${{ secrets.AZURE_STATIC_WEB_APPS_API_TOKEN_GRAY_BUSH_02BA41903 }}
           repo_token: ${{ secrets.GITHUB_TOKEN }} # Used for Github integrations (i.e. PR comments)
           action: "upload"
-          ###### Repository/Build Configurations - These values can be configured to match your app requirements. ######
-          # For more information regarding Static Web App workflow configurations, please visit: https://aka.ms/swaworkflowconfig
-          #app_build_command: "npm run build:azure"
-          app_location: "/public" # App source code path
-          output_location: "/public" # Built app content directory - optional
-          skip_api_build: true;
+          # 'no framework' type since we build manually in the GitHub runner
+          app_location: "/public"
+          output_location: "/public"
+          skip_api_build: true
           skip_app_build: true
           ###### End of Repository/Build Configurations ######
 
