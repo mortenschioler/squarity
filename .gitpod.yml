@@ -18,3 +18,4 @@ ports:
 vscode:
   extensions:
     - betterthantomorrow.calva
+    - bradlc.vscode-tailwindcss
