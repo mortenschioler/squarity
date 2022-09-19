@@ -2,6 +2,11 @@
   (:require [re-frame.core :refer [reg-sub]]))
 
 (reg-sub
- :board-visibility
+ :game-phase
  (fn [db _]
-   (:board-visibility db)))
+   (:game-phase db)))
+
+(reg-sub
+ :current-question
+ (fn [db]
+   (:current-question db)))

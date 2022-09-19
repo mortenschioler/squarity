@@ -3,9 +3,19 @@
 
 (reg-event-db
  :init-db
- (constantly {:board-visibility :colored}))
+ (constantly {:game-phase :not-started}))
+
+(defn random-square
+  []
+  (rand-int 64))
+
+(defn pose-new-question
+  [db]
+  (assoc db :current-question {:square (random-square) :phase :unanswered}))
 
 (reg-event-db
- :swap-board-color
+ :start-new-game
  (fn [db]
-   (update db :board-visibility #(case % :blank :colored :colored :blank))))
+   (-> db
+       (assoc :game-phase :in-progress)
+       (pose-new-question))))

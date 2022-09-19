@@ -13,6 +13,7 @@
   {:dark "#b58863" ; lichess dark
    :light "#f0d9b5" ; lichess light
    :gray "#f1f5f9" ; slate-100
+   :active "#334155" ; slate-50
    })
 
 (defn square
@@ -46,26 +47,35 @@
          :viewBox "0 0 8 8"
          :shape-rendering "crispEdges"
          :class "w-96 h-96"}
-   [:g
-    [:<> squares]]])
+   [:g squares]])
 
-(def colored-board
-  [board-svg (map (fn [i] (square i (color-of i))) (range 64))])
+(defn <>
+  [children]
+  (vec (conj children :<>)))
 
-(def colorless-board
-  [board-svg (map (fn [i] (with-outline (square i (:gray colors)))) (range 64))])
+(def colored-squares
+  (<> (map-indexed square (map color-of (range 64)))))
 
-(defn board-container
-  [board-visibility]
-  [:div {:class "w-12 h-12"
-         :on-click #(re-frame/dispatch [:swap-board-color])}
-   (case board-visibility
-     :colored colored-board
-     :blank colorless-board)])
+(def colorless-squares
+  (<> (map (comp with-outline square) (range 64) (repeat (:gray colors)))))
+
+(defn question-board
+  [question]
+  (assoc-in colorless-squares [(inc question) 1 :fill] (:active colors)))
+
+(defn board
+  []
+  (let [game-phase @(re-frame/subscribe [:game-phase])
+        question @(re-frame/subscribe [:current-question])]
+    [board-svg
+     (case game-phase
+       :not-started colored-squares
+       :in-progress [question-board (:square question)])]))
+
 
 (defn main
-  []
+  [] 
   (fn []
-    (let [board-visibility @(re-frame/subscribe [:board-visibility])]
-      [board-container 
-       board-visibility])))
+    [:div
+     [board]
+     [:button {:on-click #(re-frame/dispatch [:start-new-game])} "Start game"]]))
