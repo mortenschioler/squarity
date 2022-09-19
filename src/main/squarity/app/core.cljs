@@ -7,9 +7,7 @@
 
 (defn app
   []
-  [:div
-   [:h1 "Squarity!"]
-   [mainpage/main]])
+  [mainpage/main])
 
 (defn render 
   []

@@ -10,3 +10,8 @@
  :current-question
  (fn [db]
    (:current-question db)))
+
+(reg-sub
+ :score
+ (fn [db]
+   (:score db)))

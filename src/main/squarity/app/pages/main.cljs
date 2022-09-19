@@ -1,44 +1,27 @@
 (ns squarity.app.pages.main
-  (:require [re-frame.core :as re-frame]))
-
-(defn x
-  [i]
-  (mod i 8))
-
-(defn y
-  [i]
-  (quot i 8))
+  (:require [re-frame.core :as re-frame]
+            [squarity.app.chess :as chess]))
 
 (def colors
   {:dark "#b58863" ; lichess dark
    :light "#f0d9b5" ; lichess light
    :gray "#f1f5f9" ; slate-100
    :active "#334155" ; slate-50
+   :incorrect "#dc2626" ; red-600
    })
+
+(defn color-of
+  [i]
+  (colors (chess/color-of i)))
 
 (defn square
   [i color]
   [:rect {:width 1 :height 1 :fill color :id i :key i
-          :x (x i) :y (y i)}])
+          :x (chess/x i) :y (chess/y i)}])
 
 (defn with-outline
   [square]
   (update square 1 assoc :stroke "#111111" :stroke-width "0.035"))
-
-(defn light?
-  [i]
-  ; The fact that the width/height of a chess board, 8,
-  ; is a power of the binary base, lets us take advantage of bit
-  ; arithmetics. The 0'th bit toggles when x is incremented,
-  ; while the 3 bit toglles with y is incremented. This is when
-  ; indexing is done from top-left to bottom-right.
-  (= (bit-test i 0) (bit-test i 3)))
-
-(defn color-of
-  [i]
-  (if (light? i)
-    (:light colors)
-    (:dark colors)))
 
 (defn board-svg
   [squares]
@@ -63,6 +46,10 @@
   [question]
   (assoc-in colorless-squares [(inc question) 1 :fill] (:active colors)))
 
+(defn answer-board
+  [answer]
+  (assoc-in colored-squares [(inc answer) 1 :fill] (:incorrect colors)))
+
 (defn board
   []
   (let [game-phase @(re-frame/subscribe [:game-phase])
@@ -70,12 +57,33 @@
     [board-svg
      (case game-phase
        :not-started colored-squares
-       :in-progress [question-board (:square question)])]))
+       :in-progress [question-board (:square question)]
+       :game-over   [answer-board (:square question)])]))
 
+
+(defn score
+  []
+  (let [score @(re-frame/subscribe [:score])]
+    [:span (str "Score: " score)]))
+
+
+(defn hotkeys
+  [bindings & elements]
+  [:div {:tab-index 0
+         :on-key-down-capture (fn [e]
+                                (when-let [f (get bindings (.-key e))]
+                                  (f e)))}
+   [:<> elements]])
 
 (defn main
-  [] 
-  (fn []
-    [:div
-     [board]
-     [:button {:on-click #(re-frame/dispatch [:start-new-game])} "Start game"]]))
+  []
+  [hotkeys
+   {"d" #(re-frame/dispatch [:answer :dark])
+    "l" #(re-frame/dispatch [:answer :light])
+    " " #(re-frame/dispatch [:start-new-game])}
+   [:div
+    [board]
+    [:button {:on-click #(re-frame/dispatch [:start-new-game])} "Start game"]
+    [:button {:on-click #(re-frame/dispatch [:answer :light])} "Light"]
+    [:button {:on-click #(re-frame/dispatch [:answer :dark])} "Dark"]
+    [score]]])
