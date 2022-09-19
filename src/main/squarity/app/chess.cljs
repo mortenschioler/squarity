@@ -23,3 +23,12 @@
 (defn y
   [i]
   (quot i 8))
+
+(def x-names ["a" "b" "c" "d" "e" "f" "g" "h"])
+
+(def y-names ["8" "7" "6" "5" "4" "3" "2" "1"])
+
+(defn name-of 
+  [square]
+  (when square
+    (str (x-names (x square)) (y-names (y square)))))

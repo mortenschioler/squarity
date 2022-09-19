@@ -54,11 +54,15 @@
   []
   (let [game-phase @(re-frame/subscribe [:game-phase])
         question @(re-frame/subscribe [:current-question])]
-    [board-svg
-     (case game-phase
-       :not-started colored-squares
-       :in-progress [question-board (:square question)]
-       :game-over   [answer-board (:square question)])]))
+    [:div.relative
+     [board-svg
+      (case game-phase
+        :not-started colored-squares
+        :in-progress [question-board (:square question)]
+        :game-over   [answer-board (:square question)])]
+     [:div.absolute.inset-0.flex.flex-col.justify-center
+      [:span.text-center.text-5xl.font-mono.text-slate-100.font-semibold.text-shadow
+       (chess/name-of (:square question))]]]))
 
 
 (defn score
@@ -85,7 +89,7 @@
    [:div.flex.justify-center
     [:div {:class "w-1/3"}]
     [:div
-     {:class "w-1/3"}
+     {:class "w-1/3"} 
      [board]]
     [:div.flex.flex-col
      {:class "w-1/3"}
