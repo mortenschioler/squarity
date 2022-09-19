@@ -29,7 +29,7 @@
          :xlmns:x "http://www.w3.org/1999/xlink"
          :viewBox "0 0 8 8"
          :shape-rendering "crispEdges"
-         :class "w-96 h-96"}
+         :class "w-full"}
    [:g squares]])
 
 (defn <>
@@ -70,6 +70,7 @@
 (defn hotkeys
   [bindings & elements]
   [:div {:tab-index 0
+         :class "focus:outline-none"
          :on-key-down-capture (fn [e]
                                 (when-let [f (get bindings (.-key e))]
                                   (f e)))}
@@ -81,9 +82,17 @@
    {"d" #(re-frame/dispatch [:answer :dark])
     "l" #(re-frame/dispatch [:answer :light])
     " " #(re-frame/dispatch [:start-new-game])}
-   [:div
-    [board]
-    [:button {:on-click #(re-frame/dispatch [:start-new-game])} "Start game"]
-    [:button {:on-click #(re-frame/dispatch [:answer :light])} "Light"]
-    [:button {:on-click #(re-frame/dispatch [:answer :dark])} "Dark"]
-    [score]]])
+   [:div.flex.justify-center
+    [:div {:class "w-1/3"}]
+    [:div
+     {:class "w-1/3"}
+     [board]]
+    [:div.flex.flex-col
+     {:class "w-1/3"}
+     [:div
+      [:button {:on-click #(re-frame/dispatch [:start-new-game])} "Start game"]]
+     [:div
+      [:button {:on-click #(re-frame/dispatch [:answer :light])} "Light"]]
+     [:div
+      [:button {:on-click #(re-frame/dispatch [:answer :dark])} "Dark"]]
+     [score]]]])
