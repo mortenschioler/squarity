@@ -32,11 +32,13 @@
 
 (reg-event-db
  :answer
- (fn [db [_ answer]]
-   (let [{:keys [square phase]} (:current-question db)]
-     (cond
-       (= (chess/color-of square) answer) (-> db
-                                              (update :score inc)
-                                              (pose-new-question))
-       :else (-> db
-                 (game-over))))))
+ (fn [db [_ answer]] 
+   (if-not (= (:game-phase db) :in-progress)
+     db
+     (let [{:keys [square phase]} (:current-question db)]
+       (cond
+         (= (chess/color-of square) answer) (-> db
+                                                (update :score inc)
+                                                (pose-new-question))
+         :else (-> db
+                   (game-over)))))))
