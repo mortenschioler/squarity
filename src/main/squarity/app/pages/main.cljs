@@ -2,68 +2,35 @@
   (:require [re-frame.core :as re-frame]
             [squarity.app.chess :as chess]))
 
-(def colors
-  {:dark "#b58863" ; lichess dark
-   :light "#f0d9b5" ; lichess light
-   :gray "#f1f5f9" ; slate-100
-   :active "#334155" ; slate-50
-   :incorrect "#dc2626" ; red-600
-   })
-
-(defn color-of
-  [i]
-  (colors (chess/color-of i)))
+(def square-classes
+  {:dark "fill-[#b58863]"
+   :light "fill-[#f0d9b5]"
+   :hidden "fill-zinc-600 stroke-zinc-800 stroke-[0.035]"
+   :active "fill-zinc-50 stroke-zinc-800 stroke-[0.035]"
+   :incorrect "fill-red-600"})
 
 (defn square
-  [i color]
-  [:rect {:width 1 :height 1 :fill color :id i :key i
-          :x (chess/x i) :y (chess/y i)}])
-
-(defn with-outline
-  [square]
-  (update square 1 assoc :stroke "#111111" :stroke-width "0.035"))
+  [i class]
+  [:rect {:width 1 :height 1 :id i :key i :x (chess/x i) :y (chess/y i) :class class}])
 
 (defn board-svg
-  [squares]
+  [square-colors]
   [:svg {:xmlns "http://www.w3.org/2000/svg"
          :xlmns:x "http://www.w3.org/1999/xlink"
          :viewBox "0 0 8 8"
          :shape-rendering "crispEdges"
          :class "w-full"}
-   [:g squares]])
-
-(defn <>
-  [children]
-  (vec (conj children :<>)))
-
-(def colored-squares
-  (<> (map-indexed square (map color-of (range 64)))))
-
-(def colorless-squares
-  (<> (map (comp with-outline square) (range 64) (repeat (:gray colors)))))
-
-(defn question-board
-  [question]
-  (assoc-in colorless-squares [(inc question) 1 :fill] (:active colors)))
-
-(defn answer-board
-  [answer]
-  (assoc-in colored-squares [(inc answer) 1 :fill] (:incorrect colors)))
+   [:g [:<> (map-indexed square (map square-classes square-colors))]]])
 
 (defn board
   []
-  (let [game-phase @(re-frame/subscribe [:game-phase])
+  (let [square-colors @(re-frame/subscribe [:square-colors])
         question @(re-frame/subscribe [:current-question])]
     [:div.relative
-     [board-svg
-      (case game-phase
-        :not-started colored-squares
-        :in-progress [question-board (:square question)]
-        :game-over   [answer-board (:square question)])]
+     [board-svg square-colors]
      [:div.absolute.inset-0.flex.flex-col.justify-center
       [:span.text-center.text-5xl.font-mono.text-slate-100.font-semibold.text-shadow
        (chess/name-of (:square question))]]]))
-
 
 (defn score
   []
@@ -72,13 +39,13 @@
 
 
 (defn hotkeys
-  [bindings & elements]
+  [bindings element]
   [:div {:tab-index 0
          :class "focus:outline-none"
          :on-key-down-capture (fn [e]
                                 (when-let [f (get bindings (.-key e))]
                                   (f e)))}
-   [:<> elements]])
+   element])
 
 (defn main
   []
@@ -86,10 +53,10 @@
    {"d" #(re-frame/dispatch [:answer :dark])
     "l" #(re-frame/dispatch [:answer :light])
     " " #(re-frame/dispatch [:start-new-game])}
-   [:div.flex.justify-center
+   [:div.flex.justify-center.mt-8
     [:div {:class "w-1/3"}]
     [:div
-     {:class "w-1/3"} 
+     {:class "w-1/3 min-width-fit"} 
      [board]]
     [:div.flex.flex-col
      {:class "w-1/3"}
