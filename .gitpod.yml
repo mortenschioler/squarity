@@ -2,7 +2,7 @@ tasks:
   - name: Dev Server
     init: |
       npm install
-      npm run build
+      npx shadow-cljs classpath
     command: npm run dev
 github:
   prebuilds:
