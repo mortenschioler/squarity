@@ -1,5 +1,8 @@
 name: Azure Static Web Apps CI/CD
 
+env:
+  SQUARITY_CONFIG_MERGE: '{}'
+
 on:
   push:
     branches:

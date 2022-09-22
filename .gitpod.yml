@@ -1,10 +1,10 @@
 tasks:
   - name: Dev Server
+    env:
+      SQUARITY_CONFIG_MERGE: shadow-cljs-gitpod.edn
     init: |
-      mkdir ~/.shadow-cljs
-      cp /workspace/squarity/shadow-cljs-gitpod.edn ~/.shadow-cljs/config.edn
       npm install
-      npx shadow-cljs classpath
+      npm classpath
     command: npm run dev
 github:
   prebuilds:
