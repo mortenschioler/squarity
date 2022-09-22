@@ -4,7 +4,7 @@ tasks:
       SQUARITY_CONFIG_MERGE: shadow-cljs-gitpod.edn
     init: |
       npm install
-      npm classpath
+      npm run classpath
     command: npm run dev
 github:
   prebuilds:
