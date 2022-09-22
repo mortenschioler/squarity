@@ -1,6 +1,8 @@
 tasks:
   - name: Dev Server
     init: |
+      mkdir ~/.shadow-cljs
+      cp /workspace/squarity/shadow-cljs-gitpod.edn ~/.shadow-cljs/config.edn
       npm install
       npx shadow-cljs classpath
     command: npm run dev
