@@ -1,7 +1,7 @@
 tasks:
   - name: Dev Server
     env:
-      SQUARITY_CONFIG_MERGE: shadow-cljs-gitpod.edn
+      SQUARITY_M2_LOCAL_REPO: /workspace/.m2/repository
     init: |
       npm install
       npm run classpath

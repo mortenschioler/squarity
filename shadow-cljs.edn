@@ -15,4 +15,6 @@
    :output-dir "public/js"
    :asset-path "/js"
    :modules    {:main
-                {:init-fn squarity.app.core/main}}}}}
+                {:init-fn squarity.app.core/main}}}}
+
+ :maven {:local-repo #shadow/env "SQUARITY_M2_LOCAL_REPO"}}
