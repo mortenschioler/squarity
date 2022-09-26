@@ -12,12 +12,16 @@ github:
 # Ports to expose on workspace startup
 ports:
   - port: 3000
+    name: Frontend server
     onOpen: notify
-  - port: 3021
+  - port: 34000-35000
+    name: Shadow compilation server over nRepl
     onOpen: ignore
   - port: 9630
+    name: Shadow compilation server
     onOpen: ignore
 vscode:
   extensions:
     - betterthantomorrow.calva
     - bradlc.vscode-tailwindcss
+    - ms-azuretools.vscode-bicep
