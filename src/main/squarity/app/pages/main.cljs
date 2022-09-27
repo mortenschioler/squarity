@@ -53,17 +53,9 @@
    {"d" #(re-frame/dispatch [:answer :dark])
     "l" #(re-frame/dispatch [:answer :light])
     " " #(re-frame/dispatch [:start-new-game])}
-   [:div.flex.justify-center.mt-8
-    [:div {:class "w-1/3"}]
-    [:div
-     {:class "w-1/3 min-width-fit"} 
-     [board]]
-    [:div.flex.flex-col
-     {:class "w-1/3"}
+
+   [:div.mt-8
+    [:div.flex.justify-center
      [:div
-      [:button {:on-click #(re-frame/dispatch [:start-new-game])} "Start game"]]
-     [:div
-      [:button {:on-click #(re-frame/dispatch [:answer :light])} "Light"]]
-     [:div
-      [:button {:on-click #(re-frame/dispatch [:answer :dark])} "Dark"]]
-     [score]]]])
+      {:class "max-w-screen-sm w-full"}
+      [board]]]]])
