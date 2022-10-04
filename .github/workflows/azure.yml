@@ -28,9 +28,11 @@ jobs:
         uses: azure/login@v1
         with:
           creds: ${{ secrets.AZURE_SERVICE_PRINCIPLE }}
+      - name: 'Check if infrastructure code has changed'
+        run: INFRASTRUCTURE_DIFF=$(git diff ${{github.event.before}}...${{github.event.after}} -- azuredeploy.bicep azuredeploy.parameters.json)
       - name: 'Deploy infrastructure'
         id: infra
-        if: "contains(github.event.commits.*.modified, 'azuredeploy.bicep') || contains(github.event.commits.*.modified, 'azuredeploy.parameters.json')"
+        if: env.INFRASTRUCTURE_DIFF != ''
         uses: azure/arm-deploy@v1
         with:
           subscriptionId: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
