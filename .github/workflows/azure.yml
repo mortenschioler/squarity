@@ -1,4 +1,4 @@
-name: Azure Static Web Apps CI/CD
+name: Azure CI/CD
 
 env:
   SQUARITY_CONFIG_MERGE: '{}'
@@ -31,7 +31,7 @@ jobs:
         id: infra
         uses: azure/arm-deploy@v1
         with:
-          subscriptionId: ${{ secrets.AZURE_SUBSCRIPTION }}
+          subscriptionId: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
           resourceGroupName: ${{ secrets.AZURE_RG }}
           template: ./azuredeploy.bicep
           parameters: ./azuredeploy.parameters.json
