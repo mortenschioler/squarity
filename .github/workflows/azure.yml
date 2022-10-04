@@ -47,7 +47,7 @@ jobs:
       - name: Build
         run: npm run release # <- ClojureScript compilation with shadow-cljs, which is what requires java
       - name: Zip
-        run: zip -r app.zip public
+        run: '(cd public && zip -r ../app.zip .)'
       - name: Deploy Azure Web App
         id: deploywebapp
         uses: azure/CLI@v1
