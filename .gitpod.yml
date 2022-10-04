@@ -25,3 +25,4 @@ vscode:
     - betterthantomorrow.calva
     - bradlc.vscode-tailwindcss
     - ms-azuretools.vscode-bicep
+    - ms-vscode.azure-account

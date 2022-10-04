@@ -1,0 +1,53 @@
+name: Azure Static Web Apps CI/CD
+
+env:
+  SQUARITY_CONFIG_MERGE: '{}'
+
+on:
+  push:
+    branches:
+      - main
+    paths-ignore:
+      - "README.md"
+      - ".gitignore"
+  pull_request:
+    types: [opened, synchronize, reopened, closed]
+    branches:
+      - main
+
+jobs:
+  build_and_deploy:
+    runs-on: ubuntu-latest
+    name: Build and Deploy Job
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          submodules: true
+      - name: 'Login via Azure CLI'
+        uses: azure/login@v1
+        with:
+          creds: ${{ secrets.AZURE_SERVICE_PRINCIPLE }}
+      - name: 'Deploy infrastructure'
+        id: infra
+        uses: azure/arm-deploy@v1
+        with:
+          subscriptionId: ${{ secrets.AZURE_SUBSCRIPTION }}
+          resourceGroupName: ${{ secrets.AZURE_RG }}
+          template: ./azuredeploy.bicep
+          parameters: ./azuredeploy.parameters.json
+          failOnStdErr: false
+      # Building outside the container is necessary because java is required
+      - name: Set up Node.js version
+        uses: actions/setup-node@v1
+        with:
+          node-version: 'lts'
+      - name: Deps
+        run: npm ci
+      - name: Build
+        run: npm run release # <- ClojureScript compilation with shadow-cljs, which is what requires java
+      - name: Deploy Azure Web App
+        id: deploywebapp
+        uses: azure/webapps-deploy@v2
+        with:
+          app-name: squarity
+          package: "/public"
