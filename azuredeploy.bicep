@@ -40,7 +40,6 @@ resource webAppName_resource 'Microsoft.Web/sites@2020-06-01' = {
 resource webAppName_web 'Microsoft.Web/sites/sourcecontrols@2020-06-01' = if (!empty(repoUrl)) {
   parent: webAppName_resource
   name: 'web'
-  location: location
   properties: {
     repoUrl: repoUrl
     branch: branch
