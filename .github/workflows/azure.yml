@@ -46,9 +46,11 @@ jobs:
         run: npm ci
       - name: Build
         run: npm run release # <- ClojureScript compilation with shadow-cljs, which is what requires java
+      - name: Zip
+        run: zip -r app.zip public
       - name: Deploy Azure Web App
         id: deploywebapp
-        uses: azure/webapps-deploy@v2
+        uses: azure/CLI@v1
         with:
-          app-name: squarity
-          package: "./public"
+          azcliversion: 2.30.0
+          inlineScript: az webapp deploy --resource-group ${{ secrets.AZURE_RG }} --name squarity --src-path app.zip
