@@ -9,7 +9,7 @@ Squarity is a Single Page Application (SPA) written in ClojureScript that uses R
 
 The application is hosted on Azure, in a personal Free tier account belonging to @mortenschioler. Continuous deployment is set up using GitHub Actions. The GitHub Actions workflow is defined in `.github/workflows/workflow.yml`.
 
-The application can be accessed at https://gray-bush-02ba41903.1.azurestaticapps.net/. A nicer subdomain name is TODO.
+The application can be accessed at https://squarity.azurewebsites.net/.
 
 ## Node Scripts
 
@@ -33,10 +33,6 @@ npm run release
 ```
 
 This operation creates a `.shadow-cljs` folder in the project folder.
-
-> ⚠️ Note that the production build in the pipeline is performed directly in the GitHub Runner instead of inside the Action `Azure/static-web-apps-deploy@v1` because the latter
-> runs in a container that does not have Java installed, which is required for ClojureScript compilation (since the ClojureScript compiler is written in Clojure hosted on the JVM). 
->  The build artifacts are already packed into the container from the runner on startup, after the build ran in the parent process.
 
 ### Serve The App Build Locally
 
