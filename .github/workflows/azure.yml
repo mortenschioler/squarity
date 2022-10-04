@@ -22,17 +22,20 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v3
-        with:
-          fetch-depth: 100
       - name: 'Login via Azure CLI'
         uses: azure/login@v1
         with:
           creds: ${{ secrets.AZURE_SERVICE_PRINCIPLE }}
       - name: 'Check if infrastructure code has changed'
-        run: INFRASTRUCTURE_DIFF="$(git diff ${{github.event.before}}...${{github.event.after}} -- azuredeploy.bicep azuredeploy.parameters.json)"
+        uses: technote-space/get-diff-action@v4.0.1
+        id: infrastructure-code
+        with:
+          FILES: |
+            azuredeploy.bicep
+            azuredeploy.parameters.json
       - name: 'Deploy infrastructure'
         id: infra
-        if: env.INFRASTRUCTURE_DIFF != ''
+        if: steps.infrastructure-code.outputs.diff
         uses: azure/arm-deploy@v1
         with:
           subscriptionId: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
