@@ -7,6 +7,18 @@
     },
     "sku": {
       "value": "F1"
+    },
+    "reserved": {
+      "value": false
+    },
+    "httpsOnly": {
+      "value": false
+    },
+    "arrAffinity": {
+      "value": false
+    },
+    "http2": {
+      "value": true
     }
   }
 }
