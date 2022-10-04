@@ -37,6 +37,7 @@ jobs:
           template: ./azuredeploy.bicep
           parameters: ./azuredeploy.parameters.json
           failOnStdErr: false
+          deploymentMode: Complete
       # Building outside the container is necessary because java is required
       - name: Set up Node.js version
         uses: actions/setup-node@v3

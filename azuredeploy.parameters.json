@@ -7,12 +7,6 @@
     },
     "sku": {
       "value": "F1"
-    },
-    "repoUrl": {
-      "value": "https://github.com/mortenschioler/squarity"
-    },
-    "branch": {
-      "value": "main"
     }
   }
 }
