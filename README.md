@@ -26,6 +26,7 @@ The only vital part of the program that is not represented in code are:
 ## 3. Node Scripts
 
 <details>
+
 ### 3.1 Start app
 
 This will compile the app in development mode, and watch for any changes in the code and Tailwind classes.
@@ -117,6 +118,7 @@ Note that after this operation you will need to run `npm install` again before s
 Shadow-CLJS can be fairly slow to start. To improve this Shadow-CLJS can run in “server mode” which means that a dedicated process is started which all other commands can use to execute a lot faster since they won’t have to start a new JVM/Clojure instance.
 
 You can run the process in the foreground in a dedicated Terminal. Use CTRL+C to terminate the server.
+
 </details>
 
 
