@@ -1,8 +1,5 @@
 name: Azure CI/CD
 
-env:
-  SQUARITY_CONFIG_MERGE: '{}'
-
 on:
   push:
     branches:
@@ -10,10 +7,6 @@ on:
     paths-ignore:
       - "README.md"
       - ".gitignore"
-  pull_request:
-    types: [opened, synchronize, reopened, closed]
-    branches:
-      - main
 
 jobs:
   build_and_deploy:
