@@ -104,3 +104,13 @@ Note that after this operation you will need to run `npm install` again before s
 Shadow-CLJS can be fairly slow to start. To improve this Shadow-CLJS can run in “server mode” which means that a dedicated process is started which all other commands can use to execute a lot faster since they won’t have to start a new JVM/Clojure instance.
 
 You can run the process in the foreground in a dedicated Terminal. Use CTRL+C to terminate the server.
+
+
+### Acknowledgements
+
+Although this software program is almost entirely original, the board SVG structure and colors (encoded in inline HTML representations under `src/`) are a modified copy of those in [lichess.org](https://github.com/lichess-org/lila).
+
+
+### License
+
+Do feel free to take the GNU Affero General Public License licensing seriously; you may modify this program source and deploy a netowkr application as you please _provided that you also license the resulting program source under the GNU Affero General Public License_. See `LICENSE` for more details.
