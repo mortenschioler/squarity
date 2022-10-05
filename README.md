@@ -106,11 +106,11 @@ Shadow-CLJS can be fairly slow to start. To improve this Shadow-CLJS can run in 
 You can run the process in the foreground in a dedicated Terminal. Use CTRL+C to terminate the server.
 
 
-### Acknowledgements
+## Acknowledgements
 
 Although this software program is almost entirely original, the board SVG structure and colors (encoded in inline HTML representations under `src/`) are a modified copy of those in [lichess.org](https://github.com/lichess-org/lila).
 
 
-### License
+## License
 
-Do feel free to take the GNU Affero General Public License licensing seriously; you may modify this program source and deploy a netowkr application as you please _provided that you also license the resulting program source under the GNU Affero General Public License_. See `LICENSE` for more details.
+Do feel free to take the GNU Affero General Public License licensing seriously; you may modify this program source and deploy it a network application as you please _provided that you also license the resulting program source under the GNU Affero General Public License_. See `LICENSE` for more details.
