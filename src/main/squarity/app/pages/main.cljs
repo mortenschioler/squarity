@@ -38,7 +38,9 @@
 (defn score
   []
   (let [score @(re-frame/subscribe [:score])]
-    [:span (str "Score: " score)]))
+    [:div
+     {:class "py-2 text-center text-xl font-semibold text-gray-700"}
+     (str "Score: " score)]))
 
 
 (defn hotkeys
@@ -61,8 +63,6 @@
     "l" #(re-frame/dispatch [:answer :light])
     " " #(re-frame/dispatch [:start-new-game])}
 
-   [:div.mt-8
-    [:div.flex.justify-center
-     [:div
-      {:class "max-w-screen-sm w-full"}
-      [board]]]]])
+   [:div.max-w-screen-sm.w-full.mx-auto
+    [score]
+    [board]]])
