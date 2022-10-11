@@ -1,6 +1,9 @@
 (ns squarity.app.pages.main
-  (:require [re-frame.core :as re-frame]
-            [squarity.app.chess :as chess]))
+  (:require
+   [reagent.core :as reagent]
+   [reagent.dom :as reagent-dom]
+   [re-frame.core :as re-frame]
+   [squarity.app.chess :as chess]))
 
 (def square-classes
   {:dark "fill-[#b58863]"
@@ -40,12 +43,16 @@
 
 (defn hotkeys
   [bindings element]
-  [:div {:tab-index 0
-         :class "focus:outline-none"
-         :on-key-down-capture (fn [e]
-                                (when-let [f (get bindings (.-key e))]
-                                  (f e)))}
-   element])
+  (reagent/create-class
+   {:display-name "hotkeys"
+    :component-did-mount #(.focus (reagent-dom/dom-node %))
+    :reagent-render (fn []
+                      [:div {:tab-index 0
+                             :class "focus:outline-none"
+                             :on-key-down-capture (fn [e]
+                                                    (when-let [f (get bindings (.-key e))]
+                                                      (f e)))}
+                       element])}))
 
 (defn main
   []
