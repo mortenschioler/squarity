@@ -3,6 +3,11 @@
             [squarity.app.chess :as chess]))
 
 (reg-sub
+  :time
+  (fn [db]
+    (:time db)))
+
+(reg-sub
  :game-phase
  (fn [db _]
    (:game-phase db)))

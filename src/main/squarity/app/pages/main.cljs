@@ -38,9 +38,23 @@
 (defn score
   []
   (let [score @(re-frame/subscribe [:score])]
-    [:div
-     {:class "py-2 text-center text-xl font-semibold text-gray-700"}
-     (str "Score: " score)]))
+    [:span (str "Score: " score)]))
+
+(defn time-display
+  []
+  (let [time @(re-frame/subscribe [:time])]
+    [:span (.toFixed (/ time 1000) 1)]))
+
+(defn header
+  []
+  [:div
+   {:class "py-2 text-center text-xl font-semibold text-gray-700"}
+   [:span
+    {:class "w-1/2 inline-block"}
+    [score]]
+   [:span
+    {:class "w-1/2 inline-block"}
+    [time-display]]])
 
 
 (defn hotkeys
@@ -64,5 +78,5 @@
     " " #(re-frame/dispatch [:start-new-game])}
 
    [:div.max-w-screen-sm.w-full.mx-auto
-    [score]
+    [header]
     [board]]])
