@@ -3,10 +3,10 @@
             [squarity.app.chess :as chess]))
 
 (def square-classes
-  {:dark "fill-[#b58863]"
-   :light "fill-[#f0d9b5]"
-   :hidden "fill-zinc-600 stroke-zinc-800 stroke-[0.035]"
-   :active "fill-zinc-50 stroke-zinc-800 stroke-[0.035]"
+  {:dark "fill-brown-600"
+   :light "fill-brown-400"
+   :hidden "fill-gray-500 stroke-gray-600 stroke-[0.035]"
+   :active "fill-gray-200 stroke-gray-600 stroke-[0.035]"
    :incorrect "fill-red-600"})
 
 (defn square
@@ -29,7 +29,7 @@
     [:div.relative
      [board-svg square-colors]
      [:div.absolute.inset-0.flex.flex-col.justify-center
-      [:span.text-center.text-5xl.font-mono.text-slate-100.font-semibold.text-shadow
+      [:span.text-center.text-5xl.font-mono.text-gray-100.font-semibold.text-shadow
        (chess/name-of (:square question))]]]))
 
 (defn score
@@ -54,8 +54,6 @@
     "l" #(re-frame/dispatch [:answer :light])
     " " #(re-frame/dispatch [:start-new-game])}
 
-   [:div.mt-8
-    [:div.flex.justify-center
-     [:div
-      {:class "max-w-screen-sm w-full"}
-      [board]]]]])
+   [:div.mx-auto
+    {:class "max-w-screen-sm w-full"}
+    [board]]])
