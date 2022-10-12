@@ -8,8 +8,8 @@
 (def square-classes
   {:dark "fill-[#b58863]"
    :light "fill-[#f0d9b5]"
-   :hidden "fill-gray-600 stroke-gray-800 stroke-[0.035]"
-   :active "fill-gray-50 stroke-gray-800 stroke-[0.035]"
+   :hidden "fill-gray-500 stroke-gray-700 stroke-[0.02]"
+   :active "fill-gray-200 stroke-gray-700 stroke-[0.02]"
    :incorrect "fill-red-600"})
 
 (defn square
@@ -74,7 +74,7 @@
   []
   [:div
    [:button
-    {:class "w-full rounded bg-gray-200 py-3 text-lg text-gray-800 shadow-lg"
+    {:class "w-full rounded bg-green-300 p-3 text-lg text-gray-800 shadow-lg"
      :on-click #(re-frame/dispatch [:start-new-game])
      :title "Hotkey: Spacebar"}
     "Start new game"]])
@@ -109,7 +109,7 @@
    {"d" #(re-frame/dispatch [:answer :dark])
     "l" #(re-frame/dispatch [:answer :light])
     " " #(re-frame/dispatch [:start-new-game])}
-   [:div.max-w-screen-sm.w-full.mx-auto
+   [:div.max-w-screen-sm.w-full.mx-auto.h-screen-bg-gray-50
     [header]
     [board]
     [:div.mt-2

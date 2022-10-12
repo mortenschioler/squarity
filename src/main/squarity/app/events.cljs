@@ -2,7 +2,7 @@
   (:require [re-frame.core :as re-frame :refer [reg-event-db reg-event-fx reg-fx inject-cofx trim-v after path]]
             [squarity.app.chess :as chess]))
 
-(def time-to-solve-ms 10000)
+(def time-to-solve-ms 20000)
 
 (def time-resoution 100)
 
