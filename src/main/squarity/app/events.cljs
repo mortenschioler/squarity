@@ -4,7 +4,8 @@
 
 (def default-config
   {:time-to-solve 20000
-   :time-resolution 100})
+   :time-resolution 100
+   :timeout 500})
 
 (reg-event-db
  :init-db
@@ -34,6 +35,10 @@
   [db]
   (assoc-in db [:current-question :phase] :incorrect))
 
+(defn timeout
+  [db]
+  (assoc db :timeout (get-in db [:config :timeout])))
+
 (reg-event-db
  :start-new-game
  (fn [db]
@@ -62,4 +67,5 @@
      (#{:in-progress} (:game-phase db)) (as-> db
                                           (update db :time - (get-in db [:config :time-resolution]))
                                           (cond-> db
-                                            (<= (:time db) 0) (game-over))))))
+                                            (<= (:time db) 0) (-> game-over timeout)))
+     :always                             (update :timeout - (get-in db [:config :time-resolution])))))

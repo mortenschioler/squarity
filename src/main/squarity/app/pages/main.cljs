@@ -48,7 +48,7 @@
   
 (defn header
   []
-  [:div
+  [:div 
    {:class "py-2 text-center text-xl font-semibold text-gray-700"}
    [:span
     {:class "w-1/2 inline-block"}
@@ -75,7 +75,8 @@
   []
   [:div
    [:button
-    {:class "w-full rounded bg-green-300 p-3 text-lg text-gray-800 shadow-lg"
+    {:class "w-full rounded bg-green-300 disabled:bg-gray-300 disabled:text-gray-500 p-3 text-lg text-gray-800 shadow-lg"
+     :disabled @(re-frame/subscribe [:timeout])
      :on-click #(re-frame/dispatch [:start-new-game])
      :title "Hotkey: Spacebar"}
     "Start new game"]])

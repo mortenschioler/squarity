@@ -22,6 +22,11 @@
  (fn [db]
    (:score db)))
 
+(reg-sub
+ :timeout
+ (fn [db]
+   (pos? (:timeout db))))
+
 (def normal-board (mapv chess/color-of (range 64)))
 
 (def hidden-board (vec (repeat 64 :hidden)))
