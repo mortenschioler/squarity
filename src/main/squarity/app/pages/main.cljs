@@ -32,19 +32,19 @@
     [:div.relative
      [board-svg square-colors]
      [:div.absolute.inset-0.flex.flex-col.justify-center
-      [:span.text-center.text-5xl.font-mono.text-slate-100.font-semibold.text-shadow
+      [:span.text-center.text-5xl.font-mono.text-gray-100.font-semibold.text-shadow
        (chess/name-of (:square question))]]]))
 
 (defn score
   []
   (let [score @(re-frame/subscribe [:score])]
-    [:span (str "Score: " score)]))
+    [:<> [:span.text-gray-500.text-sm "Score " ] [:span score]]))
 
 (defn time-display
   []
   (let [time @(re-frame/subscribe [:time])]
-    [:span (.toFixed (/ time 1000) 1)]))
-
+    [:span (str (.toFixed (/ time 1000) 1)  "s")]))
+  
 (defn header
   []
   [:div
@@ -56,6 +56,39 @@
     {:class "w-1/2 inline-block"}
     [time-display]]])
 
+(defn guessing-buttons
+  []
+  [:div.grid.grid-cols-2.gap-x-2
+   [:button
+    {:class "rounded bg-[#b58863] py-3 text-lg text-gray-800 shadow-lg"
+     :on-click #(re-frame/dispatch [:answer :dark])
+     :title "Guess square is dark (hotkey 'd')"}
+    "dark"]
+   [:button
+    {:class "rounded bg-[#f0d9b5] py-3 text-lg text-gray-800 shadow-lg"
+     :on-click #(re-frame/dispatch [:answer :light])
+     :title "Guess square is light (hotkey 'l')"}
+    "light"]])
+
+(defn new-game-button
+  []
+  [:div
+   [:button
+    {:class "w-full rounded bg-gray-200 py-3 text-lg text-gray-800 shadow-lg"
+     :on-click #(re-frame/dispatch [:start-new-game])
+     :title "Hotkey: Spacebar"}
+    "Start new game"]])
+
+(defn footer
+  []
+  (let [gamestate @(re-frame/subscribe [:game-phase])]
+    [:div
+     [:div
+      {:class (when-not (#{:in-progress} gamestate) "hidden")}
+      [guessing-buttons]]
+     [:div
+      {:class (when (#{:in-progress} gamestate) "hidden")}
+      [new-game-button]]]))
 
 (defn hotkeys
   [bindings element]
@@ -70,13 +103,14 @@
                                                       (f e)))}
                        element])}))
 
-(defn main
+(defn page
   []
   [hotkeys
    {"d" #(re-frame/dispatch [:answer :dark])
     "l" #(re-frame/dispatch [:answer :light])
     " " #(re-frame/dispatch [:start-new-game])}
-
    [:div.max-w-screen-sm.w-full.mx-auto
     [header]
-    [board]]])
+    [board]
+    [:div.mt-2
+     [footer]]]])

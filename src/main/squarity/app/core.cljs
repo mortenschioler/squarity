@@ -3,11 +3,11 @@
             [re-frame.core :as re-frame]
             [squarity.app.events]
             [squarity.app.subs]
-            [squarity.app.pages.main :as mainpage]))
+            [squarity.app.pages.main :as main]))
 
 (defn app
   []
-  [mainpage/main])
+  [main/page])
 
 (defn render 
   []
