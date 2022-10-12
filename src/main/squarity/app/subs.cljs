@@ -2,6 +2,10 @@
   (:require [re-frame.core :refer [reg-sub]]
             [squarity.app.chess :as chess]))
 
+(reg-sub :settings-open :settings-open)
+
+(reg-sub :config :config)
+
 (reg-sub
   :time
   (fn [db]

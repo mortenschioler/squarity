@@ -14,7 +14,8 @@
     :clock (js/setInterval #(re-frame/dispatch [:tick]) (:time-resolution default-config))
     :score 0
     :time (:time-to-solve default-config)
-    :config default-config}))
+    :config default-config
+    :settings-open false}))
 
 (defn random-square
   []
@@ -69,3 +70,13 @@
                                           (cond-> db
                                             (<= (:time db) 0) (-> game-over timeout)))
      :always                             (update :timeout - (get-in db [:config :time-resolution])))))
+
+(reg-event-db
+ :open-settings
+ (fn [db]
+   (assoc db :settings-open true)))
+
+(reg-event-db
+ :close-settings
+ (fn [db]
+   (assoc db :settings-open false)))
