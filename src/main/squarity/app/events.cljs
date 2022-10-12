@@ -27,8 +27,11 @@
 (defn game-over
   [db]
   (-> db
-      (assoc :game-phase :game-over)
-      (assoc-in [:current-question :phase] :incorrect)))
+      (assoc :game-phase :game-over)))
+
+(defn incorrect
+  [db]
+  (assoc-in db [:current-question :phase] :incorrect))
 
 (reg-event-db
  :start-new-game
@@ -49,8 +52,7 @@
          (= (chess/color-of square) answer) (-> db
                                                 (update :score inc)
                                                 (pose-new-question))
-         :else (-> db
-                   (game-over)))))))
+         :else (-> db game-over incorrect))))))
 
 (reg-event-db
  :tick

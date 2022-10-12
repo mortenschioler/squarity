@@ -34,4 +34,4 @@
    (case phase
      :not-started normal-board
      :in-progress (assoc hidden-board (:square question) :active)
-     :game-over (assoc normal-board (:square question) :incorrect))))
+     :game-over (assoc normal-board (:square question) (:phase question)))))

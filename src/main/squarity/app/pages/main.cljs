@@ -10,7 +10,8 @@
    :light "fill-[#f0d9b5]"
    :hidden "fill-gray-500 stroke-gray-700 stroke-[0.02]"
    :active "fill-gray-200 stroke-gray-700 stroke-[0.02]"
-   :incorrect "fill-red-600"})
+   :incorrect "fill-red-600"
+   :unanswered "fill-gray-200"})
 
 (defn square
   [i class]
