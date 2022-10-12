@@ -2,17 +2,18 @@
   (:require [re-frame.core :as re-frame :refer [reg-event-db reg-event-fx reg-fx inject-cofx trim-v after path]]
             [squarity.app.chess :as chess]))
 
-(def time-to-solve-ms 20000)
-
-(def time-resoution 100)
+(def default-config
+  {:time-to-solve 20000
+   :time-resolution 100})
 
 (reg-event-db
  :init-db
  (fn []
    {:game-phase :not-started
-    :clock (js/setInterval #(re-frame/dispatch [:tick]) time-resoution)
+    :clock (js/setInterval #(re-frame/dispatch [:tick]) (:time-resolution default-config))
     :score 0
-    :time time-to-solve-ms}))
+    :time (:time-to-solve default-config)
+    :config default-config}))
 
 (defn random-square
   []
@@ -39,7 +40,7 @@
    (-> db
        (assoc :game-phase :in-progress
               :score 0
-              :time time-to-solve-ms)
+              :time (get-in db [:config :time-to-solve]))
        (pose-new-question))))
 
 (reg-event-db
@@ -59,6 +60,6 @@
  (fn [db]
    (cond-> db
      (#{:in-progress} (:game-phase db)) (as-> db
-                                          (update db :time - time-resoution)
+                                          (update db :time - (get-in db [:config :time-resolution]))
                                           (cond-> db
                                             (<= (:time db) 0) (game-over))))))
