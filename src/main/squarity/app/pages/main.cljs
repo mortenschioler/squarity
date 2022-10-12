@@ -8,8 +8,8 @@
 (def square-classes
   {:dark "fill-[#b58863]"
    :light "fill-[#f0d9b5]"
-   :hidden "fill-zinc-600 stroke-zinc-800 stroke-[0.035]"
-   :active "fill-zinc-50 stroke-zinc-800 stroke-[0.035]"
+   :hidden "fill-gray-600 stroke-gray-800 stroke-[0.035]"
+   :active "fill-gray-50 stroke-gray-800 stroke-[0.035]"
    :incorrect "fill-red-600"})
 
 (defn square
