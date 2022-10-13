@@ -1,4 +1,4 @@
-(ns squarity.app.subs
+(ns squarity.app.game.subs
   (:require [re-frame.core :refer [reg-sub]]
             [squarity.app.chess :as chess]))
 

@@ -1,4 +1,4 @@
-(ns squarity.app.views
+(ns squarity.app.game.views
   (:require
    [re-frame.core :as re-frame]
    [squarity.app.chess :as chess]))
@@ -76,7 +76,8 @@
     {:class "w-full rounded bg-green-300 disabled:bg-gray-300 disabled:text-gray-500 p-3 text-lg text-gray-800 shadow-lg"
      :disabled @(re-frame/subscribe [:timeout])
      :on-click #(re-frame/dispatch [:start-new-game])
-     :title "Hotkey: Spacebar"}
+     :title "Hotkey: Spacebar"
+     :tab-index -1}
     "Start new game"]])
 
 (defn footer
@@ -90,24 +91,10 @@
       {:class (when (#{:in-progress} gamestate) "hidden")}
       [new-game-button]]]))
 
-(defn hotkeys
-  [bindings element]
-  [:div {:tab-index 0 ; necessary for the element to be eligible for focus
-         :ref #(when % (.focus %)) ; see https://day8.github.io/re-frame/FAQs/FocusOnElement/
-         :class "focus:outline-none"
-         :on-key-down-capture (fn [e]
-                                (when-let [f (get bindings (.-key e))]
-                                  (f e)))}
-   [:div {:auto-focus true} element]])
-
-(defn mainpage
+(defn page
   []
-  [hotkeys
-   {"d" #(re-frame/dispatch [:answer :dark])
-    "l" #(re-frame/dispatch [:answer :light])
-    " " #(re-frame/dispatch [:start-new-game])}
-   [:div.max-w-screen-sm.w-full.mx-auto.h-screen-bg-gray-50
-    [header]
-    [board]
-    [:div.mt-2
-     [footer]]]])
+  [:div.max-w-screen-sm.w-full.mx-auto.h-screen-bg-gray-50
+   [header]
+   [board]
+   [:div.mt-2
+    [footer]]])

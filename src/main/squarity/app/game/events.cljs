@@ -1,4 +1,4 @@
-(ns squarity.app.events
+(ns squarity.app.game.events
   (:require [re-frame.core :as re-frame :refer [reg-event-db reg-event-fx reg-fx inject-cofx trim-v after path]]
             [squarity.app.chess :as chess]))
 
@@ -14,7 +14,11 @@
     :clock (js/setInterval #(re-frame/dispatch [:tick]) (:time-resolution default-config))
     :score 0
     :time (:time-to-solve default-config)
-    :config default-config}))
+    :config default-config
+    :panel :main
+    :hotkeys {:main {:keydown {"l" [:answer :light]
+                               "d" [:answer :dark]
+                               " " [:start-new-game]}}}}))
 
 (defn random-square
   []
@@ -69,3 +73,15 @@
                                           (cond-> db
                                             (<= (:time db) 0) (-> game-over timeout)))
      :always                             (update :timeout - (get-in db [:config :time-resolution])))))
+
+
+(reg-event-fx
+ :keyboard
+ (fn [{:keys [db]} [_ press-type {:keys [k]}]]
+   (when-let [event (get-in db [:hotkeys (:panel db) press-type k])]
+     {:dispatch event})))
+
+(reg-event-fx
+ :log
+ (fn [_ [_ msg]]
+   {:log msg}))
