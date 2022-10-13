@@ -1,4 +1,4 @@
-(ns squarity.app.pages.main
+(ns squarity.app.views
   (:require
    [reagent.core :as reagent]
    [reagent.dom :as reagent-dom]
@@ -103,7 +103,7 @@
                                   (f e)))}
    [:div {:auto-focus true} element]])
 
-(defn page
+(defn mainpage
   []
   [hotkeys
    {"d" #(re-frame/dispatch [:answer :dark])
