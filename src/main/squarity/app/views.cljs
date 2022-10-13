@@ -1,7 +1,5 @@
 (ns squarity.app.views
   (:require
-   [reagent.core :as reagent]
-   [reagent.dom :as reagent-dom]
    [re-frame.core :as re-frame]
    [squarity.app.chess :as chess]))
 
@@ -14,8 +12,8 @@
    :unanswered "fill-gray-200"})
 
 (defn square
-  [i class]
-  [:rect {:width 1 :height 1 :id i :key i :x (chess/x i) :y (chess/y i) :class class}])
+  [i color]
+  [:rect {:width 1 :height 1 :id i :key i :x (chess/x i) :y (chess/y i) :class (square-classes color)}])
 
 (defn board-svg
   [square-colors]
@@ -24,7 +22,7 @@
          :viewBox "0 0 8 8"
          :shape-rendering "crispEdges"
          :class "w-full"}
-   [:g [:<> (map-indexed square (map square-classes square-colors))]]])
+   (into [:g] (map-indexed square square-colors))])
 
 (defn board
   []
@@ -61,12 +59,12 @@
   []
   [:div.grid.grid-cols-2.gap-x-2
    [:button
-    {:class "rounded bg-[#b58863] py-3 text-lg text-gray-800 shadow-lg"
+    {:class "rounded bg-[#b58863] py-3 text-lg text-gray-800 shadow-lg focus:outline-none"
      :on-click #(re-frame/dispatch [:answer :dark])
      :title "Guess square is dark (hotkey 'd')"}
     "dark"]
    [:button
-    {:class "rounded bg-[#f0d9b5] py-3 text-lg text-gray-800 shadow-lg"
+    {:class "rounded bg-[#f0d9b5] py-3 text-lg text-gray-800 shadow-lg focus:outline-none"
      :on-click #(re-frame/dispatch [:answer :light])
      :title "Guess square is light (hotkey 'l')"}
     "light"]])
@@ -94,8 +92,7 @@
 
 (defn hotkeys
   [bindings element]
-  [:div {:type "input"
-         :tab-index -1
+  [:div {:tab-index 0 ; necessary for the element to be eligible for focus
          :ref #(when % (.focus %)) ; see https://day8.github.io/re-frame/FAQs/FocusOnElement/
          :class "focus:outline-none"
          :on-key-down-capture (fn [e]
