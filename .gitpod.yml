@@ -13,7 +13,7 @@ github:
 ports:
   - port: 3000
     name: Frontend server
-    onOpen: notify
+    onOpen: open-browser
   - port: 34000-35000
     name: Shadow compilation server over nRepl
     onOpen: ignore
