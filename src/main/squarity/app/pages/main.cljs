@@ -94,16 +94,14 @@
 
 (defn hotkeys
   [bindings element]
-  (reagent/create-class
-   {:display-name "hotkeys"
-    :component-did-mount #(.focus (reagent-dom/dom-node %))
-    :reagent-render (fn []
-                      [:div {:tab-index 0
-                             :class "focus:outline-none"
-                             :on-key-down-capture (fn [e]
-                                                    (when-let [f (get bindings (.-key e))]
-                                                      (f e)))}
-                       element])}))
+  [:div {:type "input"
+         :tab-index -1
+         :ref #(when % (.focus %)) ; see https://day8.github.io/re-frame/FAQs/FocusOnElement/
+         :class "focus:outline-none"
+         :on-key-down-capture (fn [e]
+                                (when-let [f (get bindings (.-key e))]
+                                  (f e)))}
+   [:div {:auto-focus true} element]])
 
 (defn page
   []
