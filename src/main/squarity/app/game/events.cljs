@@ -43,36 +43,34 @@
   [db]
   (assoc db :timeout (get-in db [:config :timeout])))
 
-(reg-event-db
- :start-new-game
- (fn [db]
-   (-> db
-       (assoc :game-phase :in-progress
-              :score 0
-              :time (get-in db [:config :time-to-solve]))
-       (pose-new-question))))
+(defn start-new-game [db]
+  (-> db
+      (assoc :game-phase :in-progress
+             :score 0
+             :time (get-in db [:config :time-to-solve]))
+      (pose-new-question)))
 
-(reg-event-db
- :answer
- (fn [db [_ answer]]
-   (if-not (= (:game-phase db) :in-progress)
-     db
-     (let [{:keys [square phase]} (:current-question db)]
-       (cond
-         (= (chess/color-of square) answer) (-> db
-                                                (update :score inc)
-                                                (pose-new-question))
-         :else (-> db game-over incorrect))))))
+(reg-event-db :start-new-game start-new-game)
 
-(reg-event-db
- :tick
- (fn [db]
-   (cond-> db
-     (#{:in-progress} (:game-phase db)) (as-> db
-                                          (update db :time - (get-in db [:config :time-resolution]))
-                                          (cond-> db
-                                            (<= (:time db) 0) (-> game-over timeout)))
-     :always                             (update :timeout - (get-in db [:config :time-resolution])))))
+(defn handle-answer [db [_ answer]]
+  (if-not (= (:game-phase db) :in-progress)
+    db
+    (let [{:keys [square]} (:current-question db)]
+      (if (= (chess/color-of square) answer)
+        (-> db (update :score inc) pose-new-question)
+        (-> db game-over incorrect)))))
+
+(reg-event-db :answer handle-answer)
+
+(defn handle-tick [db]
+  (cond-> db
+    (#{:in-progress} (:game-phase db)) (as-> db
+                                         (update db :time - (get-in db [:config :time-resolution]))
+                                         (cond-> db
+                                           (<= (:time db) 0) (-> game-over timeout)))
+    :always                            (update :timeout - (get-in db [:config :time-resolution]))))
+
+(reg-event-db :tick handle-tick)
 
 
 (reg-event-fx
