@@ -10,35 +10,32 @@ Squarity is a chess square-color trainer — a single-page ClojureScript app wit
 
 ```bash
 npm ci            # install dependencies (prefer over npm install)
-npm run dev       # compile + watch (ClojureScript + Tailwind), serves on localhost:3000
 npm run release   # production build with :advanced optimizations + minified CSS
 npm run serve     # serve public/ on port 3000 (for inspecting a release build)
-npm run repl      # connect a ClojureScript browser REPL (app must be running in browser)
 npm run clean     # remove public/js
 npm run nuke      # remove all generated artifacts and node_modules
 ```
 
 There are no automated tests.
 
-### Using the REPL
-
-The REPL evaluates in the browser, so `npm run dev` must be running and the app must be open at `localhost:3000` before connecting.
-
-Keep the REPL open as a persistent session — don't restart it per expression. Use named pipes:
+### Starting the dev server
 
 ```bash
-# Start once
-mkfifo /tmp/squarity_repl_in 2>/dev/null || true
-tail -f /dev/null > /tmp/squarity_repl_in &
-npm run repl < /tmp/squarity_repl_in > /tmp/squarity_repl_out 2>/dev/null &
-until grep -q "cljs.user=>" /tmp/squarity_repl_out 2>/dev/null; do sleep 1; done
-
-# Send an expression and wait for the prompt
-BEFORE=$(wc -c < /tmp/squarity_repl_out)
-echo '(+ 1 2)' > /tmp/squarity_repl_in
-until tail -c +$((BEFORE+1)) /tmp/squarity_repl_out 2>/dev/null | grep -q "cljs.user=>"; do sleep 1; done
-tail -c +$((BEFORE+1)) /tmp/squarity_repl_out
+bin/dev-start   # start shadow-cljs + Tailwind watch in background; prints URL when ready
+bin/dev-stop    # stop the dev server and any running REPL session
 ```
+
+`bin/dev-start` is idempotent — safe to call if the server is already running.
+
+### Using the REPL
+
+The REPL evaluates in the browser. `bin/dev-start` must be running and the app must be open at `localhost:3000` before the REPL will connect. On WSL, open the URL manually in your Windows browser.
+
+```bash
+bin/repl '(+ 1 2)'   # evaluate a ClojureScript expression
+```
+
+`bin/repl` keeps a persistent REPL session alive via named pipes — it starts the session on first call and reuses it on subsequent calls. Do not run `npm run repl` directly.
 
 ## Architecture
 

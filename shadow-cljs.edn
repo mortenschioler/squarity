@@ -1,5 +1,5 @@
 {:source-paths
- ["src/main" "src/test"]
+ ["src/main" "src/test" "src/dev"]
 
  :dependencies
  [[reagent                  "1.0.0"]
@@ -20,7 +20,9 @@
    :output-dir "public/js"
    :asset-path "/js"
    :modules    {:main
-                {:init-fn squarity.app.core/main}}}
+                {:init-fn squarity.app.core/main}}
+   :devtools   {:preloads      [squarity.dev]
+               :repl-init-ns squarity.dev}}
   :test
   {:target    :node-test
    :output-to "out/test.js"}}

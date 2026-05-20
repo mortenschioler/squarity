@@ -1,0 +1,39 @@
+#!/usr/bin/env bash
+# Evaluate a ClojureScript expression in the running browser REPL.
+# Usage: bin/repl '(+ 1 2)'
+#
+# Prerequisites: bin/dev must be running and the app open in a browser.
+# The REPL session is kept alive between calls via named pipes.
+
+set -euo pipefail
+
+if [[ $# -eq 0 ]]; then
+  echo "Usage: bin/repl '<cljs-expression>'" >&2
+  exit 1
+fi
+
+EXPR="$1"
+PIPE_IN=/tmp/squarity_repl_in
+PIPE_OUT=/tmp/squarity_repl_out
+
+# Ensure input pipe exists
+mkfifo "$PIPE_IN" 2>/dev/null || true
+
+# Ensure feed process keeps the pipe open (prevents EOF on the REPL's stdin)
+if ! pgrep -f "tail -f /dev/null > $PIPE_IN" > /dev/null 2>&1; then
+  tail -f /dev/null > "$PIPE_IN" &
+fi
+
+# Start REPL session if not already running
+if ! pgrep -f "shadow-cljs cljs-repl" > /dev/null 2>&1; then
+  : > "$PIPE_OUT"
+  npm run repl < "$PIPE_IN" > "$PIPE_OUT" 2>&1 &
+  echo "Starting REPL session..." >&2
+  until grep -q "=>" "$PIPE_OUT" 2>/dev/null; do sleep 1; done
+fi
+
+# Send expression and wait for next prompt
+BEFORE=$(wc -c < "$PIPE_OUT")
+echo "$EXPR" > "$PIPE_IN"
+until tail -c +$((BEFORE + 1)) "$PIPE_OUT" 2>/dev/null | grep -q "=>"; do sleep 1; done
+tail -c +$((BEFORE + 1)) "$PIPE_OUT"
