@@ -5,5 +5,8 @@
            re-frame.core/reg-cofx                            clojure.core/def
            clojure.test.check.clojure-test/defspec           clojure.core/def}
 
+ ;; re-frame middleware vars are idiomatically referred in bulk — suppress individually
+ :linters {:unused-referred-var {:exclude {re-frame.core [reg-event-db reg-event-fx reg-fx inject-cofx trim-v after path]}}}
+
  ;; squarity.dev is a REPL convenience namespace — its requires are intentional
  :config-in-ns {squarity.dev {:linters {:unused-namespace {:level :off}}}}}
