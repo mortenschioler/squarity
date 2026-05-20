@@ -9,7 +9,10 @@
   ;; pollute the :app build because shadow-cljs only compiles namespaces reachable
   ;; from each build's entry point — test.check never enters the :app graph.
   [binaryage/devtools        "1.0.2"]
-  [org.clojure/test.check    "1.1.1"]]
+  [org.clojure/test.check    "1.1.1"]
+  [cider/cider-nrepl         "0.28.7"]]
+
+ :nrepl {:middleware [cider.nrepl/cider-middleware]}
 
  :dev-http
  {3000 "public"}

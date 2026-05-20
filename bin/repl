@@ -1,39 +1,197 @@
 #!/usr/bin/env bash
-# Evaluate a ClojureScript expression in the running browser REPL.
-# Usage: bin/repl '(+ 1 2)'
+# Evaluate a ClojureScript expression via shadow-cljs nREPL.
+# Usage: bin/repl '<cljs-expression>'
+#        bin/repl --complete '<prefix>'
 #
-# Prerequisites: bin/dev must be running and the app open in a browser.
-# The REPL session is kept alive between calls via named pipes.
+# Prerequisites: bin/dev-start must be running and the app open in a browser.
+# Session is persisted across calls — no startup delay after the first use.
 
-set -euo pipefail
+BB=$(command -v bb 2>/dev/null || echo "${HOME}/.local/bin/bb")
+TMP=$(mktemp /tmp/squarity_repl_XXXXXX.bb)
+trap 'rm -f "$TMP"' EXIT
+cat > "$TMP" << 'BABASHKA'
 
-if [[ $# -eq 0 ]]; then
-  echo "Usage: bin/repl '<cljs-expression>'" >&2
-  exit 1
-fi
+(import [java.net Socket]
+        [java.io PushbackInputStream])
+(require '[clojure.java.io :as io]
+         '[clojure.string :as str])
 
-EXPR="$1"
-PIPE_IN=/tmp/squarity_repl_in
-PIPE_OUT=/tmp/squarity_repl_out
+;; ── Bencode ────────────────────────────────────────────────────────────────────
 
-# Ensure input pipe exists
-mkfifo "$PIPE_IN" 2>/dev/null || true
+(defn be-encode [v]
+  (cond
+    (nil? v)        (be-encode "")
+    (keyword? v)    (be-encode (name v))
+    (string? v)     (let [b (.getBytes ^String v "UTF-8")]
+                      (str (alength b) ":" v))
+    (integer? v)    (str "i" v "e")
+    (map? v)        (str "d"
+                         (->> v (sort-by (comp str key))
+                              (map (fn [[k w]] (str (be-encode k) (be-encode w))))
+                              str/join)
+                         "e")
+    (sequential? v) (str "l" (str/join (map be-encode v)) "e")
+    :else           (be-encode (str v))))
 
-# Ensure feed process keeps the pipe open (prevents EOF on the REPL's stdin)
-if ! pgrep -f "tail -f /dev/null > $PIPE_IN" > /dev/null 2>&1; then
-  tail -f /dev/null > "$PIPE_IN" &
-fi
+(defn be-decode [^PushbackInputStream pis]
+  (let [b (.read pis)]
+    (when (neg? b) (throw (ex-info "EOF" {})))
+    (let [c (char b)]
+      (cond
+        (= c \i)
+        (let [sb (StringBuilder.)]
+          (loop []
+            (let [ch (char (.read pis))]
+              (if (= ch \e) (Long/parseLong (str sb))
+                  (do (.append sb ch) (recur))))))
 
-# Start REPL session if not already running
-if ! pgrep -f "shadow-cljs cljs-repl" > /dev/null 2>&1; then
-  : > "$PIPE_OUT"
-  npm run repl < "$PIPE_IN" > "$PIPE_OUT" 2>&1 &
-  echo "Starting REPL session..." >&2
-  until grep -q "=>" "$PIPE_OUT" 2>/dev/null; do sleep 1; done
-fi
+        (= c \l)
+        (loop [acc []]
+          (let [x (.read pis)]
+            (if (= (char x) \e) acc
+                (do (.unread pis x) (recur (conj acc (be-decode pis)))))))
 
-# Send expression and wait for next prompt
-BEFORE=$(wc -c < "$PIPE_OUT")
-echo "$EXPR" > "$PIPE_IN"
-until tail -c +$((BEFORE + 1)) "$PIPE_OUT" 2>/dev/null | grep -q "=>"; do sleep 1; done
-tail -c +$((BEFORE + 1)) "$PIPE_OUT"
+        (= c \d)
+        (loop [m {}]
+          (let [x (.read pis)]
+            (if (= (char x) \e) m
+                (do (.unread pis x)
+                    (recur (assoc m (be-decode pis) (be-decode pis)))))))
+
+        (Character/isDigit c)
+        (let [sb (doto (StringBuilder.) (.append c))]
+          (loop []
+            (let [ch (char (.read pis))]
+              (if (= ch \:)
+                (let [len (Long/parseLong (str sb))
+                      buf (byte-array len)]
+                  (loop [n 0]
+                    (when (< n len)
+                      (recur (+ n (.read pis buf n (- len n))))))
+                  (String. buf "UTF-8"))
+                (do (.append sb ch) (recur))))))
+
+        :else (throw (ex-info (str "Unexpected bencode char: " c) {}))))))
+
+;; ── nREPL transport ────────────────────────────────────────────────────────────
+
+(def ^:private counter (atom 0))
+
+(defn- nrepl-port []
+  (let [f (io/file ".shadow-cljs/nrepl.port")]
+    (when-not (.exists f)
+      (binding [*out* *err*]
+        (println "No .shadow-cljs/nrepl.port — run bin/dev-start first."))
+      (System/exit 1))
+    (Long/parseLong (str/trim (slurp f)))))
+
+(defn- connect [port]
+  (let [sock (doto (Socket. "localhost" (int port)) (.setSoTimeout 15000))
+        out  (.getOutputStream sock)
+        in   (PushbackInputStream. (.getInputStream sock) 8192)]
+    {:sock sock :out out :in in}))
+
+(defn- send! [{:keys [^java.io.OutputStream out]} msg]
+  (let [payload (.getBytes ^String (be-encode (assoc msg "id" (str "r" (swap! counter inc)))) "UTF-8")]
+    (.write out payload)
+    (.flush out)))
+
+(defn- recv-done! [{:keys [in]}]
+  (loop [acc []]
+    (let [msg (be-decode in)
+          done? (some #{"done"} (get msg "status" []))]
+      (if done? (conj acc msg) (recur (conj acc msg))))))
+
+(defn- rpc [conn msg]
+  (send! conn msg)
+  (recv-done! conn))
+
+;; ── Session management ─────────────────────────────────────────────────────────
+
+(def ^:private session-file "/tmp/squarity_nrepl_session")
+
+(defn- saved-session []
+  (let [f (io/file session-file)]
+    (when (.exists f) (str/trim (slurp f)))))
+
+(defn- persist-session! [s] (spit session-file s))
+(defn- drop-session!    []  (.delete (io/file session-file)))
+
+(defn- new-session! [conn]
+  (let [session (get (first (rpc conn {"op" "clone"})) "new-session")]
+    (when-not session
+      (binding [*out* *err*] (println "Failed to create nREPL session."))
+      (System/exit 1))
+    (rpc conn {"op" "eval" "session" session
+               "code" "(shadow.cljs.devtools.api/nrepl-select :app)"})
+    (rpc conn {"op" "eval" "session" session "code" "(in-ns 'squarity.dev)"})
+    (persist-session! session)
+    session))
+
+(defn- get-session [conn]
+  (if-let [s (saved-session)]
+    ;; Ping to confirm the session is still alive
+    (let [r (first (rpc conn {"op" "eval" "session" s "code" ":ping"}))]
+      (if (some #{"session-closed" "session-gone"} (get r "status" []))
+        (do (drop-session!) (new-session! conn))
+        s))
+    (new-session! conn)))
+
+;; ── Eval ───────────────────────────────────────────────────────────────────────
+
+(defn- print-responses! [resps]
+  (doseq [r resps]
+    (when-let [v (get r "value")]
+      (when-not (= v ":repl/exception!")   ; sentinel — real error already in :err
+        (println v)))
+    (when-let [o (get r "out")] (print o))
+    (when-let [e (get r "err")] (print e))           ; errors to stdout — visible in Bash tool
+    (when (some #{"eval-error"} (get r "status" []))
+      (when-let [ex (get r "ex")] (println ex)))))
+
+(defn- eval! [conn sess code]
+  (let [rs (rpc conn {"op" "eval" "session" sess "code" code})]
+    (if (some #(some #{"session-closed"} (get % "status" [])) rs)
+      (eval! conn (do (drop-session!) (new-session! conn)) code)
+      (print-responses! rs))))
+
+;; ── Completions ────────────────────────────────────────────────────────────────
+
+(defn- complete! [conn sess prefix]
+  (let [rs (rpc conn {"op" "complete" "session" sess
+                      "prefix" prefix "ns" "squarity.dev"})
+        cs (mapcat #(get % "completions" []) rs)]
+    (if (seq cs)
+      (doseq [c cs]
+        (println (cond-> (get c "candidate")
+                   (get c "type") (str "\t[" (get c "type") "]"))))
+      (println "(no completions)"))))
+
+;; ── Main ───────────────────────────────────────────────────────────────────────
+
+(let [[mode arg] *command-line-args*]
+  (when-not mode
+    (binding [*out* *err*]
+      (println "Usage: bin/repl '<cljs-expression>'")
+      (println "       bin/repl --complete '<prefix>'"))
+    (System/exit 1))
+  (let [port (nrepl-port)
+        conn (try (connect port)
+                  (catch Exception _
+                    (binding [*out* *err*]
+                      (println "Cannot connect to nREPL on port" port "— run bin/dev-start first."))
+                    (System/exit 1)))
+        sess (try (get-session conn)
+                  (catch Exception e
+                    (binding [*out* *err*]
+                      (println "Session error:" (.getMessage e)))
+                    (.close (:sock conn))
+                    (System/exit 1)))]
+    (try
+      (if (= mode "--complete")
+        (complete! conn sess (or arg ""))
+        (eval! conn sess mode))
+      (finally (.close (:sock conn))))))
+
+BABASHKA
+"$BB" "$TMP" "$@"

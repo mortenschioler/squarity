@@ -1,0 +1,9 @@
+{:lint-as {re-frame.core/reg-event-db                        clojure.core/def
+           re-frame.core/reg-event-fx                        clojure.core/def
+           re-frame.core/reg-sub                             clojure.core/def
+           re-frame.core/reg-fx                              clojure.core/def
+           re-frame.core/reg-cofx                            clojure.core/def
+           clojure.test.check.clojure-test/defspec           clojure.core/def}
+
+ ;; squarity.dev is a REPL convenience namespace — its requires are intentional
+ :config-in-ns {squarity.dev {:linters {:unused-namespace {:level :off}}}}}

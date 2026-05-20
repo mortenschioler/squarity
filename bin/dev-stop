@@ -3,7 +3,6 @@
 
 pgrep -f "shadow-cljs" | xargs -r kill 2>/dev/null || true
 pgrep -f "tailwindcss.*watch" | xargs -r kill 2>/dev/null || true
-pgrep -f "tail -f /dev/null > /tmp/squarity_repl" | xargs -r kill 2>/dev/null || true
-rm -f /tmp/squarity_repl_out
+rm -f /tmp/squarity_nrepl_session
 
 echo "Dev server stopped."

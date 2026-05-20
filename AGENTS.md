@@ -32,10 +32,14 @@ bin/dev-stop    # stop the dev server and any running REPL session
 The REPL evaluates in the browser. `bin/dev-start` must be running and the app must be open at `localhost:3000` before the REPL will connect. On WSL, open the URL manually in your Windows browser.
 
 ```bash
-bin/repl '(+ 1 2)'   # evaluate a ClojureScript expression
+bin/repl '(+ 1 2)'            # evaluate a ClojureScript expression
+bin/repl --complete 'chess/'  # complete a symbol prefix
+bin/lint                       # lint src/ with clj-kondo
 ```
 
-`bin/repl` keeps a persistent REPL session alive via named pipes — it starts the session on first call and reuses it on subsequent calls. Do not run `npm run repl` directly.
+`bin/repl` communicates with shadow-cljs's nREPL server via babashka. Sessions persist across calls — no startup delay after the first use. The session starts in the `squarity.dev` namespace, which provides aliases: `chess`, `events`, `subs`, `views`, `rf`.
+
+For exploratory expressions, use a `(comment ...)` block inside `squarity.dev` and send forms individually via `bin/repl`. Do not run `npm run repl` directly.
 
 ## Architecture
 

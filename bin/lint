@@ -1,0 +1,4 @@
+#!/usr/bin/env bash
+# Lint the project with clj-kondo.
+KONDO=$(command -v clj-kondo 2>/dev/null || echo "${HOME}/.local/bin/clj-kondo")
+exec "$KONDO" --lint src/ "$@"
