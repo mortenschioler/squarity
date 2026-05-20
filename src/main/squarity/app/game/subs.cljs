@@ -23,9 +23,9 @@
    (:score db)))
 
 (reg-sub
- :timeout
+ :locked-out?
  (fn [db]
-   (pos? (:timeout db))))
+   (pos? (:lockout-remaining db))))
 
 (def normal-board (mapv chess/color-of (range 64)))
 

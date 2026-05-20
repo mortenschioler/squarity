@@ -9,7 +9,7 @@
   (merge {:game-phase :not-started
           :score      0
           :time       (:time-to-solve events/default-config)
-          :timeout    0
+          :lockout-remaining 0
           :config     events/default-config
           :panel      :main
           :hotkeys    {}}

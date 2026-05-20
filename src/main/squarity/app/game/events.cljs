@@ -3,9 +3,10 @@
             [squarity.app.chess :as chess]))
 
 (def default-config
-  {:time-to-solve 20000
-   :time-resolution 100
-   :timeout 500})
+  {:time-to-solve 20000 ; The duration of one game
+   :time-resolution 100 ; The number of ms the game clock (:time) is decremented at a time
+   :lockout-duration 500}) ; The minimum number of ms between consecutive user input, throttling further inputs when positive
+   
 
 (reg-event-db
  :init-db
@@ -14,6 +15,7 @@
     :clock (js/setInterval #(re-frame/dispatch [:tick]) (:time-resolution default-config))
     :score 0
     :time (:time-to-solve default-config)
+    :lockout-remaining 0
     :config default-config
     :panel :main
     :hotkeys {:main {:keydown {"l" [:answer :light]
@@ -39,9 +41,9 @@
   [db]
   (assoc-in db [:current-question :phase] :incorrect))
 
-(defn timeout
+(defn start-lockout
   [db]
-  (assoc db :timeout (get-in db [:config :timeout])))
+  (assoc db :lockout-remaining (get-in db [:config :lockout-duration])))
 
 (defn start-new-game [db]
   (-> db
@@ -63,12 +65,13 @@
 (reg-event-db :answer handle-answer)
 
 (defn handle-tick [db]
-  (cond-> db
-    (#{:in-progress} (:game-phase db)) (as-> db
-                                         (update db :time - (get-in db [:config :time-resolution]))
-                                         (cond-> db
-                                           (<= (:time db) 0) (-> game-over timeout)))
-    :always                            (update :timeout - (get-in db [:config :time-resolution]))))
+  (let [time-elapsed (get-in db [:config :time-resolution])]
+    (cond-> db
+      (#{:in-progress} (:game-phase db)) (as-> db 
+                                           (update db :time - time-elapsed)
+                                           (cond-> db
+                                             (<= (:time db) 0) (-> game-over start-lockout)))
+      :always                            (update :lockout-remaining - time-elapsed))))
 
 (reg-event-db :tick handle-tick)
 

@@ -74,7 +74,7 @@
   [:div
    [:button
     {:class "w-full rounded bg-green-300 disabled:bg-gray-300 disabled:text-gray-500 p-3 text-lg text-gray-800 shadow-lg"
-     :disabled @(re-frame/subscribe [:timeout])
+     :disabled @(re-frame/subscribe [:locked-out?])
      :on-click #(re-frame/dispatch [:start-new-game])
      :title "Hotkey: Spacebar"
      :tab-index -1}
