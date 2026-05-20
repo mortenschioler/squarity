@@ -77,6 +77,38 @@
     (is (= :game-over (:game-phase db3)))
     (is (s/valid? ::db/db db3))))
 
+;; ── Sequence-based tests ─────────────────────────────────────────────────────
+
+(def event-gen
+  (gen/one-of
+    [(gen/return [:start-new-game])
+     (gen/let [color (gen/elements [:light :dark])] [:answer color])
+     (gen/return [:tick])]))
+
+(defn valid-step?
+  "Checks phase-machine and score invariants across a single transition."
+  [[event before after]]
+  (let [bp (:game-phase before)
+        ap (:game-phase after)]
+    (and
+      ;; :not-started can never transition directly to :game-over
+      (not= [bp ap] [:not-started :game-over])
+      ;; nothing ever transitions back to :not-started
+      (or (= bp :not-started) (not= ap :not-started))
+      ;; score is non-decreasing except when :start-new-game resets it
+      (or (= (first event) :start-new-game)
+          (>= (:score after) (:score before))))))
+
+(defspec event-sequence-preserves-invariants
+  (prop/for-all [events (gen/vector event-gen 1 20)]
+    (let [initial       (make-db {})
+          states        (reductions step-db initial events)
+          before-states (butlast states)
+          after-states  (rest states)]
+      (and
+        (every? (partial s/valid? ::db/db) states)
+        (every? valid-step? (map vector events before-states after-states))))))
+
 ;; ── Generators ───────────────────────────────────────────────────────────────
 
 (def square-gen (gen/choose 0 63))
@@ -99,15 +131,15 @@
               :lockout-remaining lockout})))
 
 (def in-progress-db-gen
-  (gen/let [score    score-gen
-            time     (gen/choose 1 20000)
-            lockout  gen/small-integer
-            question question-gen]
+  (gen/let [score   score-gen
+            time    (gen/choose 1 20000)
+            lockout gen/small-integer
+            square  square-gen]
     (make-db {:game-phase        :in-progress
               :score             score
               :time              time
               :lockout-remaining lockout
-              :current-question  question})))
+              :current-question  {:square square :phase :unanswered}})))
 
 (def game-over-db-gen
   (gen/let [score    score-gen

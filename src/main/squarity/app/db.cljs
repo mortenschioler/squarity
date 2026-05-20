@@ -46,12 +46,28 @@
 ;; ── App DB ────────────────────────────────────────────────────────────────────
 
 (s/def ::db
-  (s/keys :req-un [::game-phase
-                   ::score
-                   ::time
-                   ::lockout-remaining
-                   ::clock
-                   ::config
-                   ::panel
-                   ::hotkeys]
-          :opt-un [::current-question]))
+  (s/and
+    (s/keys :req-un [::game-phase
+                     ::score
+                     ::time
+                     ::lockout-remaining
+                     ::clock
+                     ::config
+                     ::panel
+                     ::hotkeys]
+            :opt-un [::current-question])
+    ;; :current-question is required once a game has started
+    (fn [{:keys [game-phase current-question]}]
+      (if (#{:in-progress :game-over} game-phase)
+        (some? current-question)
+        true))
+    ;; time remaining is positive while the game is running
+    (fn [{:keys [game-phase time]}]
+      (if (= game-phase :in-progress)
+        (pos? time)
+        true))
+    ;; the active question is always freshly posed (unanswered) during play
+    (fn [{:keys [game-phase current-question]}]
+      (if (= game-phase :in-progress)
+        (= :unanswered (:phase current-question))
+        true))))
