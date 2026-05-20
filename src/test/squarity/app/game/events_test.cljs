@@ -1,8 +1,10 @@
 (ns squarity.app.game.events-test
   (:require [cljs.spec.alpha :as s]
+            [cljs.test :refer [deftest is]]
             [clojure.test.check.clojure-test :refer [defspec]]
             [clojure.test.check.generators :as gen]
             [clojure.test.check.properties :as prop]
+            [re-frame.registrar :as registrar]
             [squarity.app.chess :as chess]
             [squarity.app.db :as db]
             [squarity.app.game.events :as events]))
@@ -19,6 +21,61 @@
           :panel             :main
           :hotkeys           {}}
          overrides))
+
+(defn step
+  "Apply a re-frame event to cofx, returning the resulting effects map.
+   Pure — never touches app-db. Handler is always last in the interceptor chain."
+  [cofx event]
+  (let [handler (last (registrar/get-handler :event (first event)))
+        ctx     {:coeffects (assoc cofx :event event) :effects {}}]
+    (:effects ((:before handler) ctx))))
+
+(defn step-db
+  "Apply a re-frame event to db, returning the new db."
+  [db event]
+  (:db (step {:db db} event)))
+
+;; ── Event-based tests ────────────────────────────────────────────────────────
+
+(deftest start-new-game-enters-in-progress
+  (let [db (step-db (make-db {}) [:start-new-game])]
+    (is (= :in-progress (:game-phase db)))
+    (is (s/valid? ::db/db db))))
+
+(deftest one-correct-answer-increments-score
+  (let [db0  (step-db (make-db {}) [:start-new-game])
+        sq   (get-in db0 [:current-question :square])
+        db1  (step-db db0 [:answer (chess/color-of sq)])]
+    (is (= :in-progress (:game-phase db1)))
+    (is (= 1 (:score db1)))
+    (is (s/valid? ::db/db db1))))
+
+(deftest one-wrong-answer-ends-game
+  (let [db0   (step-db (make-db {}) [:start-new-game])
+        sq    (get-in db0 [:current-question :square])
+        wrong (if (= :light (chess/color-of sq)) :dark :light)
+        db1   (step-db db0 [:answer wrong])]
+    (is (= :game-over (:game-phase db1)))
+    (is (= :incorrect (get-in db1 [:current-question :phase])))
+    (is (s/valid? ::db/db db1))))
+
+(deftest last-tick-ends-game
+  (let [db0 (make-db {:game-phase :in-progress
+                      :time       (:time-resolution events/default-config)
+                      :current-question {:square 0 :phase :unanswered}})
+        db1 (step-db db0 [:tick])]
+    (is (= :game-over (:game-phase db1)))
+    (is (s/valid? ::db/db db1))))
+
+(deftest two-correct-then-wrong-ends-game-with-score-2
+  (let [db0  (step-db (make-db {}) [:start-new-game])
+        db1  (step-db db0 [:answer (chess/color-of (get-in db0 [:current-question :square]))])
+        db2  (step-db db1 [:answer (chess/color-of (get-in db1 [:current-question :square]))])
+        sq   (get-in db2 [:current-question :square])
+        db3  (step-db db2 [:answer (if (= :light (chess/color-of sq)) :dark :light)])]
+    (is (= 2 (:score db3)))
+    (is (= :game-over (:game-phase db3)))
+    (is (s/valid? ::db/db db3))))
 
 ;; ── Generators ───────────────────────────────────────────────────────────────
 
