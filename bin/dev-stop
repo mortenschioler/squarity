@@ -1,8 +1,9 @@
 #!/usr/bin/env bash
-# Stop the dev server (shadow-cljs + Tailwind watch) and any running REPL session.
+# Stop the dev server (shadow-cljs + Tailwind watch + headless browser) and any REPL session.
 
 pgrep -f "shadow-cljs" | xargs -r kill 2>/dev/null || true
 pgrep -f "tailwindcss.*watch" | xargs -r kill 2>/dev/null || true
+pgrep -f "src/dev/browser.js" | xargs -r kill 2>/dev/null || true
 rm -f /tmp/squarity_nrepl_session
 
 echo "Dev server stopped."

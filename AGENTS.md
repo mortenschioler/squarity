@@ -21,23 +21,24 @@ There are no automated tests.
 ### Starting the dev server
 
 ```bash
-bin/dev-start   # start shadow-cljs + Tailwind watch in background; prints URL when ready
-bin/dev-stop    # stop the dev server and any running REPL session
+bin/dev-start   # start shadow-cljs + Tailwind watch + headless browser; fully self-contained
+bin/dev-stop    # stop all of the above and any running REPL session
 ```
 
-`bin/dev-start` is idempotent — safe to call if the server is already running.
+`bin/dev-start` is idempotent — safe to call if the server is already running. No manual browser visit needed; a headless Chromium instance (via Playwright) opens `localhost:3000` automatically and serves as the REPL runtime.
 
 ### Using the REPL
-
-The REPL evaluates in the browser. `bin/dev-start` must be running and the app must be open at `localhost:3000` before the REPL will connect. On WSL, open the URL manually in your Windows browser.
 
 ```bash
 bin/repl '(+ 1 2)'            # evaluate a ClojureScript expression
 bin/repl --complete 'chess/'  # complete a symbol prefix
 bin/lint                       # lint src/ with clj-kondo
+bin/screenshot                 # capture the live app page to /tmp/squarity_screenshot.png
 ```
 
 `bin/repl` communicates with shadow-cljs's nREPL server via babashka. Sessions persist across calls — no startup delay after the first use. The session starts in the `squarity.dev` namespace, which provides aliases: `chess`, `events`, `subs`, `views`, `rf`.
+
+`bin/screenshot` connects to the same headless browser via CDP and screenshots its current state. Drive the app to any state via `bin/repl` first, then screenshot to inspect it visually.
 
 For exploratory expressions, use a `(comment ...)` block inside `squarity.dev` and send forms individually via `bin/repl`. Do not run `npm run repl` directly.
 

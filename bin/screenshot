@@ -1,0 +1,9 @@
+#!/usr/bin/env bash
+# Screenshot the live app page via the CDP-connected headless browser.
+# Usage: bin/screenshot [output-path]
+# Default output: /tmp/squarity_screenshot.png
+
+set -euo pipefail
+
+OUT="${1:-/tmp/squarity_screenshot.png}"
+node src/dev/screenshot.js "$OUT"

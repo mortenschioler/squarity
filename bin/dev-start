@@ -1,11 +1,11 @@
 #!/usr/bin/env bash
-# Start the dev server (shadow-cljs + Tailwind watch) in the background.
+# Start the dev server (shadow-cljs + Tailwind watch + headless browser) in the background.
 # Idempotent — safe to call if already running.
-# The REPL requires a browser connected to the app; open it manually (see below).
 
 set -euo pipefail
 
 LOG=/tmp/squarity_dev.log
+BROWSER_LOG=/tmp/squarity_browser.log
 
 if pgrep -f "shadow-cljs watch app" > /dev/null 2>&1; then
   echo "Dev server already running (log: $LOG)"
@@ -16,12 +16,11 @@ npm run dev > "$LOG" 2>&1 &
 echo "Dev server starting... (log: $LOG)"
 
 until nc -z localhost 3000 2>/dev/null; do sleep 1; done
+until grep -q "Build completed" "$LOG" 2>/dev/null; do sleep 1; done
+
+node src/dev/browser.js > "$BROWSER_LOG" 2>&1 &
+until nc -z localhost 9222 2>/dev/null; do sleep 1; done
 
 echo ""
-echo "Dev server ready."
-echo ""
-echo "  Open in browser: http://localhost:3000"
-echo ""
-echo "  (WSL users: open the URL in your Windows browser)"
-echo "  The REPL will not work until the page is open."
+echo "Dev server ready. REPL and screenshots available."
 echo ""
