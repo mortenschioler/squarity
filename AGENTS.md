@@ -16,7 +16,13 @@ npm run clean     # remove public/js
 npm run nuke      # remove all generated artifacts and node_modules
 ```
 
-There are no automated tests.
+### Running tests
+
+```bash
+npx shadow-cljs compile test && node out/test.js
+```
+
+The `:test` build compiles to `out/test.js` (a Node.js target). Run before every commit.
 
 ### Starting the dev server
 
@@ -34,6 +40,7 @@ bin/repl '(+ 1 2)'            # evaluate a ClojureScript expression
 bin/repl --complete 'chess/'  # complete a symbol prefix
 bin/lint                       # lint src/ with clj-kondo
 bin/screenshot                 # capture the live app page to /tmp/squarity_screenshot.png
+node src/dev/browser-reload.js # reload the headless browser page (clears stale JS after restart)
 ```
 
 `bin/repl` communicates with shadow-cljs's nREPL server via babashka. Sessions persist across calls — no startup delay after the first use. The session starts in the `squarity.dev` namespace, which provides aliases: `chess`, `events`, `subs`, `views`, `rf`.
@@ -89,6 +96,7 @@ keyboard / button clicks
 ### Key files
 
 - `chess.cljs` — pure functions: square index → x/y/name/color. Squares are indexed 0–63 left-to-right, top-to-bottom (a8=0, h8=7, a1=56, h1=63).
+- `db.cljs` — `cljs.spec.alpha` spec for the full app-db shape, including three content invariants: `:current-question` is required once a game has started; `:time` is positive while `:in-progress`; and the active question is always `:unanswered` during play.
 - `game/events.cljs` — all Re-Frame event handlers. Contains game logic (answer checking, time countdown, game-over transitions). Also owns the hotkey dispatch mechanism: the `:keyboard` event reads `db[:hotkeys][panel][press-type][key]` and re-dispatches whatever vector it finds.
 - `game/subs.cljs` — subscriptions. `:square-colors` is the main derived value: a 64-element vector of color keywords used by the board renderer; it shows the full board when not in-progress, and a hidden board with one `:active` square during play.
 - `game/views.cljs` — Reagent components. `board-svg` renders an 8×8 SVG using a 0–8 viewBox (each square is 1 unit). Tailwind classes for square colors are in `square-classes`.
@@ -98,6 +106,36 @@ keyboard / button clicks
 ### Adding a hotkey
 
 Add an entry to the `:hotkeys` map in `:init-db` (in `events.cljs`) under the relevant panel and press type. The value must be a Re-Frame dispatch vector.
+
+## Testing
+
+Tests live in `src/test/squarity/app/game/events_test.cljs` and use `clojure.test.check` for property-based testing alongside `cljs.test` for concrete `deftest` cases.
+
+### Test helpers
+
+`step` and `step-db` are pure re-frame dispatchers that bypass `app-db`:
+
+```clojure
+(step  cofx event)   ; cofx map → effects map, via re-frame.registrar
+(step-db db event)   ; db → new db, convenience wrapper over step
+```
+
+They look up the handler from the live registrar (`re-frame.registrar/get-handler :event id`) and call it directly. The handler is always the last interceptor in the chain — a re-frame invariant. No `app-db` mutation; tests are pure functions.
+
+Use `step-db` to construct db states by threading meaningful events rather than building maps by hand:
+
+```clojure
+(-> (make-db {})
+    (step-db [:start-new-game])
+    (step-db [:answer :light])
+    ...)
+```
+
+### Test structure
+
+- **Spec conformance** — each event handler is checked against `::db/db` over 100 generated inputs per game phase.
+- **Concrete event flows** — `deftest` cases asserting specific outcomes of multi-step event sequences.
+- **Sequence invariants** — `event-sequence-preserves-invariants` generates random sequences of up to 20 events, folds them through `step-db`, and checks both `s/valid? ::db/db` and phase/score invariants at every intermediate state.
 
 ## Deployment
 
