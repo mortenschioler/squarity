@@ -42,6 +42,16 @@ bin/screenshot                 # capture the live app page to /tmp/squarity_scre
 
 For exploratory expressions, use a `(comment ...)` block inside `squarity.dev` and send forms individually via `bin/repl`. Do not run `npm run repl` directly.
 
+### Workflow habits
+
+After every edit to `src/`:
+
+1. **Lint** — `bin/lint`. Fix all warnings before proceeding; none are acceptable to leave.
+2. **Test** — `npx shadow-cljs compile test && node out/test.js`. Run before committing.
+3. **Screenshot** — `bin/screenshot` after UI changes. Drive the app to the relevant state via `bin/repl` first so the screenshot reflects real runtime state, not just initial load.
+
+Do not wait to be asked for any of these.
+
 ## Architecture
 
 The stack is **Reagent + Re-Frame** (ClojureScript), compiled by **shadow-cljs**, styled with **Tailwind CSS**. All source lives under `src/main/squarity/app/`.
