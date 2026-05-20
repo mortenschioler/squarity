@@ -1,40 +1,88 @@
 (ns squarity.app.game.events-test
-  (:require [clojure.test.check.clojure-test :refer [defspec]]
+  (:require [cljs.spec.alpha :as s]
+            [clojure.test.check.clojure-test :refer [defspec]]
             [clojure.test.check.generators :as gen]
             [clojure.test.check.properties :as prop]
             [squarity.app.chess :as chess]
+            [squarity.app.db :as db]
             [squarity.app.game.events :as events]))
 
+;; ── Helpers ──────────────────────────────────────────────────────────────────
+
 (defn make-db [overrides]
-  (merge {:game-phase :not-started
-          :score      0
-          :time       (:time-to-solve events/default-config)
+  (merge {:game-phase        :not-started
+          :score             0
+          :time              (:time-to-solve events/default-config)
           :lockout-remaining 0
-          :config     events/default-config
-          :panel      :main
-          :hotkeys    {}}
+          :clock             :fake-clock
+          :config            events/default-config
+          :panel             :main
+          :hotkeys           {}}
          overrides))
+
+;; ── Generators ───────────────────────────────────────────────────────────────
 
 (def square-gen (gen/choose 0 63))
 (def score-gen  gen/nat)
 (def time-resolution (get-in events/default-config [:time-resolution]))
+(def answer-gen (gen/elements [:light :dark]))
+
+(def question-gen
+  (gen/let [square square-gen
+            phase  (gen/elements [:unanswered :incorrect])]
+    {:square square :phase phase}))
+
+(def not-started-db-gen
+  (gen/let [score   score-gen
+            time    (gen/choose 0 20000)
+            lockout gen/small-integer]
+    (make-db {:game-phase        :not-started
+              :score             score
+              :time              time
+              :lockout-remaining lockout})))
 
 (def in-progress-db-gen
-  (gen/let [score  score-gen
-            time   (gen/choose 1 20000)
-            square square-gen]
-    (make-db {:game-phase       :in-progress
-              :score            score
-              :time             time
-              :current-question {:square square :phase :unanswered}})))
+  (gen/let [score    score-gen
+            time     (gen/choose 1 20000)
+            lockout  gen/small-integer
+            question question-gen]
+    (make-db {:game-phase        :in-progress
+              :score             score
+              :time              time
+              :lockout-remaining lockout
+              :current-question  question})))
+
+(def game-over-db-gen
+  (gen/let [score    score-gen
+            time     gen/small-integer
+            lockout  gen/small-integer
+            question question-gen]
+    (make-db {:game-phase        :game-over
+              :score             score
+              :time              time
+              :lockout-remaining lockout
+              :current-question  question})))
+
+(def any-db-gen
+  (gen/one-of [not-started-db-gen in-progress-db-gen game-over-db-gen]))
 
 (def not-in-progress-db-gen
-  (gen/let [phase  (gen/elements [:not-started :game-over])
-            score  score-gen
-            square square-gen]
-    (make-db {:game-phase       phase
-              :score            score
-              :current-question {:square square :phase :unanswered}})))
+  (gen/one-of [not-started-db-gen game-over-db-gen]))
+
+;; ── Spec conformance ─────────────────────────────────────────────────────────
+
+(defspec start-new-game-produces-valid-db
+  (prop/for-all [db any-db-gen]
+    (s/valid? ::db/db (events/start-new-game db))))
+
+(defspec handle-answer-produces-valid-db
+  (prop/for-all [db     any-db-gen
+                 answer answer-gen]
+    (s/valid? ::db/db (events/handle-answer db [:answer answer]))))
+
+(defspec handle-tick-produces-valid-db
+  (prop/for-all [db any-db-gen]
+    (s/valid? ::db/db (events/handle-tick db))))
 
 ;; ── pose-new-question ────────────────────────────────────────────────────────
 
@@ -71,7 +119,7 @@
 
 (defspec answer-noop-when-not-in-progress
   (prop/for-all [db     not-in-progress-db-gen
-                 answer (gen/elements [:light :dark])]
+                 answer answer-gen]
     (= db (events/handle-answer db [:answer answer]))))
 
 ;; ── handle-tick ──────────────────────────────────────────────────────────────
