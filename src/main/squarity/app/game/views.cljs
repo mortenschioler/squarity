@@ -10,39 +10,34 @@
    :active     "fill-gray-200 stroke-gray-700 stroke-[0.02]"
    :unanswered "fill-gray-200"})
 
-(def incorrect->base
-  {:incorrect-dark  :dark
-   :incorrect-light :light})
-
-(def incorrect-stroke-width 0.06)
-(def incorrect-inset (/ incorrect-stroke-width 2))
+(def overlay-stroke-width 0.06)
+(def overlay-inset (/ overlay-stroke-width 2))
 
 (defn square
   [i color]
-  (let [x (chess/x i) y (chess/y i)]
-    (if-let [base (incorrect->base color)]
-      [:g {:key i}
-       [:rect {:width 1 :height 1 :x x :y y :class (square-classes base)}]
-       [:rect {:x (+ x incorrect-inset) :y (+ y incorrect-inset)
-               :width (- 1 incorrect-stroke-width) :height (- 1 incorrect-stroke-width)
-               :fill "none" :stroke "#dc2626" :stroke-width incorrect-stroke-width}]]
-      [:rect {:width 1 :height 1 :id i :key i :x x :y y :class (square-classes color)}])))
+  [:rect {:width 1 :height 1 :id i :key i :x (chess/x i) :y (chess/y i) :class (square-classes color)}])
 
 (defn board-svg
-  [square-colors]
+  [square-colors incorrect-sq]
   [:svg {:xmlns "http://www.w3.org/2000/svg"
          :xlmns:x "http://www.w3.org/1999/xlink"
          :viewBox "0 0 8 8"
          :shape-rendering "crispEdges"
          :class "w-full"}
-   (into [:g] (map-indexed square square-colors))])
+   (into [:g] (map-indexed square square-colors))
+   (when incorrect-sq
+     (let [x (chess/x incorrect-sq) y (chess/y incorrect-sq)]
+       [:rect {:x (+ x overlay-inset) :y (+ y overlay-inset)
+               :width (- 1 overlay-stroke-width) :height (- 1 overlay-stroke-width)
+               :fill "none" :stroke "#dc2626" :stroke-width overlay-stroke-width}]))])
 
 (defn board
   []
   (let [square-colors @(re-frame/subscribe [:square-colors])
-        question @(re-frame/subscribe [:current-question])]
+        question      @(re-frame/subscribe [:current-question])
+        incorrect-sq  @(re-frame/subscribe [:incorrect-square])]
     [:div.relative
-     [board-svg square-colors]
+     [board-svg square-colors incorrect-sq]
      [:div.absolute.inset-0.flex.flex-col.justify-center
       [:span.text-center.text-5xl.font-mono.text-gray-100.font-semibold.text-shadow
        (chess/name-of (:square question))]]]))
