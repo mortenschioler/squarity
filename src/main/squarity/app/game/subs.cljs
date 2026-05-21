@@ -1,5 +1,6 @@
 (ns squarity.app.game.subs
-  (:require [re-frame.core :refer [reg-sub]]
+  (:require [clojure.set :as set]
+            [re-frame.core :refer [reg-sub]]
             [squarity.app.chess :as chess]))
 
 (reg-sub
@@ -30,6 +31,21 @@
 (reg-sub
  :config
  (fn [db] (:config db)))
+
+(reg-sub
+ :panel
+ (fn [db] (:panel db)))
+
+(reg-sub
+ :hotkeys
+ (fn [db] (:hotkeys db)))
+
+(reg-sub
+ :event->hotkey
+ :<- [:hotkeys]
+ :<- [:panel]
+ (fn [[hotkeys panel] _]
+   (set/map-invert (get-in hotkeys [panel :keydown]))))
 
 (reg-sub
  :time-warning?

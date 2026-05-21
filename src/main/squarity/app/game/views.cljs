@@ -10,6 +10,11 @@
    :active     "fill-gray-200 stroke-gray-700 stroke-[0.02]"
    :unanswered "fill-gray-200"})
 
+(defn key-label [k]
+  (let [hotkey (if (= k " ") "Space" (.toUpperCase k))]
+    {:tooltip (str "Hotkey: (" hotkey ")")
+     :hotkey hotkey}))
+
 (def overlay-stroke-width 0.06)
 (def overlay-inset (/ overlay-stroke-width 2))
 
@@ -67,28 +72,37 @@
 
 (defn guessing-buttons
   []
-  [:div.grid.grid-cols-2.gap-x-2
-   [:button
-    {:class "rounded bg-[#b58863] py-3 text-lg text-gray-800 shadow-lg focus:outline-none"
-     :on-click #(re-frame/dispatch [:answer :dark])
-     :title "Guess square is dark (hotkey 'd')"}
-    "dark"]
-   [:button
-    {:class "rounded bg-[#f0d9b5] py-3 text-lg text-gray-800 shadow-lg focus:outline-none"
-     :on-click #(re-frame/dispatch [:answer :light])
-     :title "Guess square is light (hotkey 'l')"}
-    "light"]])
+  (let [e->k @(re-frame/subscribe [:event->hotkey])
+        e->key-label (comp key-label (partial get e->k))] 
+    [:div.grid.grid-cols-2.gap-x-2
+     (let [e [:answer :dark]
+           {:keys [hotkey tooltip]} (e->key-label e)]
+       [:button
+        {:class    "rounded bg-[#b58863] py-3 text-lg text-gray-800 shadow-lg focus:outline-none"
+         :on-click #(re-frame/dispatch e)
+         :title    tooltip}
+        (str "dark (" hotkey ")")])
+     (let [e [:answer :light]
+           {:keys [hotkey tooltip]} (e->key-label e)]
+      [:button
+       {:class    "rounded bg-[#f0d9b5] py-3 text-lg text-gray-800 shadow-lg focus:outline-none"
+        :on-click #(re-frame/dispatch e)
+        :title    tooltip}
+       (str "light (" hotkey ")")])]))
 
 (defn new-game-button
   []
-  [:div
-   [:button
-    {:class "w-full rounded bg-green-300 disabled:bg-gray-300 disabled:text-gray-500 p-3 text-lg text-gray-800 shadow-lg"
-     :disabled @(re-frame/subscribe [:locked-out?])
-     :on-click #(re-frame/dispatch [:start-new-game])
-     :title "Hotkey: Spacebar"
-     :tab-index -1}
-    "Start new game"]])
+  (let [e->k @(re-frame/subscribe [:event->hotkey])
+        e [:start-new-game]
+        {:keys [hotkey tooltip]} (key-label (get e->k e))]
+    [:div
+     [:button
+      {:class     "w-full rounded bg-green-300 disabled:bg-gray-300 disabled:text-gray-500 p-3 text-lg text-gray-800 shadow-lg"
+       :disabled  @(re-frame/subscribe [:locked-out?])
+       :on-click  #(re-frame/dispatch e)
+       :title     tooltip
+       :tab-index -1}
+      (str "Start new game (" hotkey ")")]]))
 
 (defn footer
   []
