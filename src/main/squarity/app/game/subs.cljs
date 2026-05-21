@@ -51,4 +51,9 @@
    (case phase
      :not-started normal-board
      :in-progress (assoc hidden-board (:square question) :active)
-     :game-over (assoc normal-board (:square question) (:phase question)))))
+     :game-over (let [sq    (:square question)
+                      phase (:phase question)]
+                  (assoc normal-board sq
+                         (if (= phase :incorrect)
+                           (keyword (str "incorrect-" (name (chess/color-of sq))))
+                           phase))))))

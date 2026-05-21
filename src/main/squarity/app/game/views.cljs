@@ -4,16 +4,29 @@
    [squarity.app.chess :as chess]))
 
 (def square-classes
-  {:dark "fill-[#b58863]"
-   :light "fill-[#f0d9b5]"
-   :hidden "fill-gray-500 stroke-gray-700 stroke-[0.02]"
-   :active "fill-gray-200 stroke-gray-700 stroke-[0.02]"
-   :incorrect "fill-red-600"
+  {:dark       "fill-[#b58863]"
+   :light      "fill-[#f0d9b5]"
+   :hidden     "fill-gray-500 stroke-gray-700 stroke-[0.02]"
+   :active     "fill-gray-200 stroke-gray-700 stroke-[0.02]"
    :unanswered "fill-gray-200"})
+
+(def incorrect->base
+  {:incorrect-dark  :dark
+   :incorrect-light :light})
+
+(def incorrect-stroke-width 0.06)
+(def incorrect-inset (/ incorrect-stroke-width 2))
 
 (defn square
   [i color]
-  [:rect {:width 1 :height 1 :id i :key i :x (chess/x i) :y (chess/y i) :class (square-classes color)}])
+  (let [x (chess/x i) y (chess/y i)]
+    (if-let [base (incorrect->base color)]
+      [:g {:key i}
+       [:rect {:width 1 :height 1 :x x :y y :class (square-classes base)}]
+       [:rect {:x (+ x incorrect-inset) :y (+ y incorrect-inset)
+               :width (- 1 incorrect-stroke-width) :height (- 1 incorrect-stroke-width)
+               :fill "none" :stroke "#dc2626" :stroke-width incorrect-stroke-width}]]
+      [:rect {:width 1 :height 1 :id i :key i :x x :y y :class (square-classes color)}])))
 
 (defn board-svg
   [square-colors]
