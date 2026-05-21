@@ -22,12 +22,13 @@
 
 ;; ── Config ────────────────────────────────────────────────────────────────────
 
-(s/def ::time-to-solve   pos-int?)
-(s/def ::time-resolution pos-int?)
-(s/def ::lockout-duration pos-int?)
+(s/def ::time-to-solve    pos-int?)
+(s/def ::time-resolution  pos-int?)
+(s/def ::lockout-duration  nat-int?)
+(s/def ::warning-threshold nat-int?)
 
 (s/def ::config
-  (s/keys :req-un [::time-to-solve ::time-resolution ::lockout-duration]))
+  (s/keys :req-un [::time-to-solve ::time-resolution ::lockout-duration ::warning-threshold]))
 
 ;; ── Hotkeys ───────────────────────────────────────────────────────────────────
 

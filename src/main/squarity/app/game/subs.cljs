@@ -27,6 +27,18 @@
  (fn [db]
    (pos? (:lockout-remaining db))))
 
+(reg-sub
+ :config
+ (fn [db] (:config db)))
+
+(reg-sub
+ :time-warning?
+ :<- [:time]
+ :<- [:game-phase]
+ :<- [:config]
+ (fn [[time phase config] _]
+   (and (= phase :in-progress) (< time (:warning-threshold config)))))
+
 (def normal-board (mapv chess/color-of (range 64)))
 
 (def hidden-board (vec (repeat 64 :hidden)))

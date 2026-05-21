@@ -41,8 +41,10 @@
 
 (defn time-display
   []
-  (let [time @(re-frame/subscribe [:time])]
-    [:span (str (.toFixed (/ time 1000) 1)  "s")]))
+  (let [time    @(re-frame/subscribe [:time])
+        warning? @(re-frame/subscribe [:time-warning?])]
+    [:span {:class (when warning? "text-red-500 font-bold")}
+     (str (.toFixed (/ time 1000) 1) "s")]))
   
 (defn header
   []

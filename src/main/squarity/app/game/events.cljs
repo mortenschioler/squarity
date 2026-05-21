@@ -5,8 +5,8 @@
 (def default-config
   {:time-to-solve 20000 ; The duration of one game
    :time-resolution 100 ; The number of ms the game clock (:time) is decremented at a time
-   :lockout-duration 500}) ; The minimum number of ms between consecutive user input, throttling further inputs when positive
-   
+   :lockout-duration 0  ; When a game ends by timeout, a "lockout" is enstated lasting this number of milliseconds
+   :warning-threshold 5000}) ; Timer turns red below this many ms remaining
 
 (reg-event-db
  :init-db
