@@ -1,8 +1,9 @@
 (ns squarity.app.core
   (:require [reagent.dom :as rdom]
             [re-frame.core :as re-frame]
+            [re-frame.subs]
             [squarity.app.effects]
-            [squarity.app.game.events] 
+            [squarity.app.game.events]
             [squarity.app.game.subs]
             [squarity.app.game.views :as game.views]))
 
@@ -20,6 +21,7 @@
   (render) 
   (.addEventListener js/document "keydown" #(re-frame/dispatch [:keyboard :keydown {:k (.-key %)}])))
 
-(defn ^:dev/after-load reload! 
+(defn ^:dev/after-load reload!
   []
+  (reset! re-frame.subs/query->reaction {})
   (render))

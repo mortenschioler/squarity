@@ -40,7 +40,7 @@ bin/repl '(+ 1 2)'            # evaluate a ClojureScript expression
 bin/repl --complete 'chess/'  # complete a symbol prefix
 bin/lint                       # lint src/ with clj-kondo
 bin/screenshot                 # capture the live app page to /tmp/squarity_screenshot.png
-node src/dev/browser-reload.js # reload the headless browser page (clears stale JS after restart)
+node src/dev/browser-reload.js # full page reload — resets app state but disconnects the REPL (see pitfalls)
 ```
 
 `bin/repl` communicates with shadow-cljs's nREPL server via babashka. Sessions persist across calls — no startup delay after the first use. The session starts in the `squarity.dev` namespace, which provides aliases: `chess`, `events`, `subs`, `views`, `rf`.
@@ -48,6 +48,14 @@ node src/dev/browser-reload.js # reload the headless browser page (clears stale 
 `bin/screenshot` connects to the same headless browser via CDP and screenshots its current state. Drive the app to any state via `bin/repl` first, then screenshot to inspect it visually.
 
 For exploratory expressions, use a `(comment ...)` block inside `squarity.dev` and send forms individually via `bin/repl`. Do not run `npm run repl` directly.
+
+### REPL pitfalls
+
+**Stale subscriptions after hot-reload**: Shadow-cljs re-registers event handlers on hot-reload but does not flush re-frame's subscription cache (`re-frame.subs/query->reaction`). Components keep reading from old stale reactions. `reload!` in `core.cljs` clears the cache before every re-render, so edits to any source file are safe. If you ever flush the cache manually, you must call `(squarity.app.core/render)` immediately after — skipping the render leaves components with dead reactions and the DOM stops updating.
+
+**`browser-reload.js` temporarily disconnects the REPL**: A full page reload creates a new JS execution context. Shadow-cljs reconnects its REPL WebSocket after the page loads, but reconnection completes slightly after `networkidle`. Calling `bin/repl` immediately after `browser-reload.js` can evaluate in the pre-reload context, causing a split-brain where the REPL reports one app state while the screenshot shows another. Wait ~2 seconds after a browser reload before using `bin/repl`. For subscription-staleness issues, prefer calling `(squarity.app.core/reload!)` via REPL — it clears the cache and re-renders in-place without a page reload or REPL disconnect.
+
+**`dispatch` vs `dispatch-sync` from the REPL**: `re-frame/dispatch` is async — reading `app-db` in the same REPL expression sees the pre-dispatch state. Always use `rf/dispatch-sync` when sequencing multiple dependent events from the REPL.
 
 ### Workflow habits
 
