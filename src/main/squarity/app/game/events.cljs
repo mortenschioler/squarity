@@ -32,6 +32,12 @@
         new-square (first (remove #{previous-square} (repeatedly random-square)))]
     (assoc db :current-question {:square new-square :phase :unanswered})))
 
+(defn- in-progress? [db]
+  (= :in-progress (:game-phase db)))
+
+(defn- timer-expired? [db]
+  (<= (:time db) 0))
+
 (defn game-over
   [db]
   (-> db
@@ -55,7 +61,7 @@
 (reg-event-db :start-new-game start-new-game)
 
 (defn handle-answer [db [_ answer]]
-  (if-not (= (:game-phase db) :in-progress)
+  (if-not (in-progress? db)
     db
     (let [{:keys [square]} (:current-question db)]
       (if (= (chess/color-of square) answer)
@@ -64,14 +70,16 @@
 
 (reg-event-db :answer handle-answer)
 
-(defn handle-tick [db]
-  (let [time-elapsed (get-in db [:config :time-resolution])]
+(defn- advance-timer [db time-elapsed]
+  (let [db (update db :time - time-elapsed)]
     (cond-> db
-      (#{:in-progress} (:game-phase db)) (as-> db 
-                                           (update db :time - time-elapsed)
-                                           (cond-> db
-                                             (<= (:time db) 0) (-> game-over start-lockout)))
-      :always                            (update :lockout-remaining - time-elapsed))))
+      (timer-expired? db) (-> game-over start-lockout))))
+
+(defn handle-tick [db]
+  (let [time-elapsed (get-in db [:config :time-resolution])
+        db           (update db :lockout-remaining - time-elapsed)]
+    (cond-> db
+      (in-progress? db) (advance-timer time-elapsed))))
 
 (reg-event-db :tick handle-tick)
 
