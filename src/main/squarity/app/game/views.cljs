@@ -106,14 +106,11 @@
 
 (defn footer
   []
-  (let [gamestate @(re-frame/subscribe [:game-phase])]
+  (let [phase @(re-frame/subscribe [:game-phase])]
     [:div
-     [:div
-      {:class (when-not (#{:in-progress} gamestate) "hidden")}
-      [guessing-buttons]]
-     [:div
-      {:class (when (#{:in-progress} gamestate) "hidden")}
-      [new-game-button]]]))
+     (if (= :in-progress phase)
+       [guessing-buttons]
+       [new-game-button])]))
 
 (defn page
   []
