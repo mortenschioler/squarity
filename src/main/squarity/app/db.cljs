@@ -3,7 +3,9 @@
 
 ;; ── Primitives ────────────────────────────────────────────────────────────────
 
-(s/def ::game-phase #{:not-started :in-progress :game-over})
+(s/def ::status #{:not-started :in-progress :game-over})
+(s/def ::reason #{:timeout :wrong-answer})
+(s/def ::game-phase (s/keys :req-un [::status] :opt-un [::reason]))
 (s/def ::score      nat-int?)
 (s/def ::time       int?)
 ;; Number of ms remaining in post-game lockout. Feature prevents input that the user
@@ -15,10 +17,9 @@
 ;; ── Current question ──────────────────────────────────────────────────────────
 
 (s/def ::square (s/int-in 0 64))
-(s/def ::phase  #{:unanswered :incorrect})
 
 (s/def ::current-question
-  (s/keys :req-un [::square ::phase]))
+  (s/keys :req-un [::square]))
 
 ;; ── Config ────────────────────────────────────────────────────────────────────
 
@@ -59,16 +60,11 @@
             :opt-un [::current-question])
     ;; :current-question is required once a game has started
     (fn [{:keys [game-phase current-question]}]
-      (if (#{:in-progress :game-over} game-phase)
+      (if (#{:in-progress :game-over} (:status game-phase))
         (some? current-question)
         true))
     ;; time remaining is positive while the game is running
     (fn [{:keys [game-phase time]}]
-      (if (= game-phase :in-progress)
+      (if (= :in-progress (:status game-phase))
         (pos? time)
-        true))
-    ;; the active question is always freshly posed (unanswered) during play
-    (fn [{:keys [game-phase current-question]}]
-      (if (= game-phase :in-progress)
-        (= :unanswered (:phase current-question))
         true))))

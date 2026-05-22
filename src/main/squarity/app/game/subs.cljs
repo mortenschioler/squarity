@@ -10,8 +10,17 @@
 
 (reg-sub
  :game-phase
- (fn [db _]
-   (:game-phase db)))
+ (fn [db] (:game-phase db)))
+
+(reg-sub
+ :game-status
+ :<- [:game-phase]
+ (fn [phase _] (:status phase)))
+
+(reg-sub
+ :game-over-reason
+ :<- [:game-phase]
+ (fn [phase _] (:reason phase)))
 
 (reg-sub
  :current-question
@@ -50,10 +59,10 @@
 (reg-sub
  :time-warning?
  :<- [:time]
- :<- [:game-phase]
+ :<- [:game-status]
  :<- [:config]
- (fn [[time phase config] _]
-   (and (= phase :in-progress) (< time (:warning-threshold config)))))
+ (fn [[time status config] _]
+   (and (= status :in-progress) (< time (:warning-threshold config)))))
 
 (def normal-board (mapv chess/color-of (range 64)))
 
@@ -61,21 +70,23 @@
 
 (reg-sub
  :square-colors
- :<- [:game-phase]
+ :<- [:game-status]
  :<- [:current-question]
- (fn [[phase question] _]
-   (case phase
+ :<- [:game-over-reason]
+ (fn [[status question reason] _]
+   (case status
      :not-started normal-board
      :in-progress (assoc hidden-board (:square question) :active)
-     :game-over (assoc normal-board (:square question)
-                       (if (= :incorrect (:phase question))
-                         (chess/color-of (:square question))
-                         :unanswered)))))
+     :game-over   (assoc normal-board (:square question)
+                         (if (= :wrong-answer reason)
+                           (chess/color-of (:square question))
+                           :unanswered)))))
 
 (reg-sub
  :incorrect-square
- :<- [:game-phase]
+ :<- [:game-status]
  :<- [:current-question]
- (fn [[phase question] _]
-   (when (and (= phase :game-over) (= :incorrect (:phase question)))
+ :<- [:game-over-reason]
+ (fn [[status question reason] _]
+   (when (and (= :game-over status) (= :wrong-answer reason))
      (:square question))))

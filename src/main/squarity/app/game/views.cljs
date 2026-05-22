@@ -106,9 +106,9 @@
 
 (defn footer
   []
-  (let [phase @(re-frame/subscribe [:game-phase])]
+  (let [status @(re-frame/subscribe [:game-status])]
     [:div
-     (if (= :in-progress phase)
+     (if (= :in-progress status)
        [guessing-buttons]
        [new-game-button])]))
 

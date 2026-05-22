@@ -11,7 +11,7 @@
 (reg-event-db
  :init-db
  (fn []
-   {:game-phase :not-started
+   {:game-phase {:status :not-started}
     :clock (js/setInterval #(re-frame/dispatch [:tick]) (:time-resolution default-config))
     :score 0
     :time (:time-to-solve default-config)
@@ -30,22 +30,17 @@
   [db]
   (let [previous-square (get-in db [:current-question :square])
         new-square (first (remove #{previous-square} (repeatedly random-square)))]
-    (assoc db :current-question {:square new-square :phase :unanswered})))
+    (assoc db :current-question {:square new-square})))
 
 (defn- in-progress? [db]
-  (= :in-progress (:game-phase db)))
+  (= :in-progress (get-in db [:game-phase :status])))
 
 (defn- timer-expired? [db]
   (<= (:time db) 0))
 
 (defn game-over
-  [db]
-  (-> db
-      (assoc :game-phase :game-over)))
-
-(defn incorrect
-  [db]
-  (assoc-in db [:current-question :phase] :incorrect))
+  [db reason]
+  (assoc db :game-phase {:status :game-over :reason reason}))
 
 (defn start-lockout
   [db]
@@ -53,7 +48,7 @@
 
 (defn start-new-game [db]
   (-> db
-      (assoc :game-phase :in-progress
+      (assoc :game-phase {:status :in-progress}
              :score 0
              :time (get-in db [:config :time-to-solve]))
       (pose-new-question)))
@@ -66,14 +61,14 @@
     (let [{:keys [square]} (:current-question db)]
       (if (= (chess/color-of square) answer)
         (-> db (update :score inc) pose-new-question)
-        (-> db game-over incorrect)))))
+        (-> db (game-over :wrong-answer))))))
 
 (reg-event-db :answer handle-answer)
 
 (defn- advance-timer [db time-elapsed]
   (let [db (update db :time - time-elapsed)]
     (cond-> db
-      (timer-expired? db) (-> game-over start-lockout))))
+      (timer-expired? db) (-> (game-over :timeout) start-lockout))))
 
 (defn handle-tick [db]
   (let [time-elapsed (get-in db [:config :time-resolution])

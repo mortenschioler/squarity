@@ -12,7 +12,7 @@
 ;; ── Helpers ──────────────────────────────────────────────────────────────────
 
 (defn make-db [overrides]
-  (merge {:game-phase        :not-started
+  (merge {:game-phase        {:status :not-started}
           :score             0
           :time              (:time-to-solve events/default-config)
           :lockout-remaining 0
@@ -39,14 +39,14 @@
 
 (deftest start-new-game-enters-in-progress
   (let [db (step-db (make-db {}) [:start-new-game])]
-    (is (= :in-progress (:game-phase db)))
+    (is (= :in-progress (get-in db [:game-phase :status])))
     (is (s/valid? ::db/db db))))
 
 (deftest one-correct-answer-increments-score
   (let [db0  (step-db (make-db {}) [:start-new-game])
         sq   (get-in db0 [:current-question :square])
         db1  (step-db db0 [:answer (chess/color-of sq)])]
-    (is (= :in-progress (:game-phase db1)))
+    (is (= :in-progress (get-in db1 [:game-phase :status])))
     (is (= 1 (:score db1)))
     (is (s/valid? ::db/db db1))))
 
@@ -55,16 +55,17 @@
         sq    (get-in db0 [:current-question :square])
         wrong (if (= :light (chess/color-of sq)) :dark :light)
         db1   (step-db db0 [:answer wrong])]
-    (is (= :game-over (:game-phase db1)))
-    (is (= :incorrect (get-in db1 [:current-question :phase])))
+    (is (= :game-over (get-in db1 [:game-phase :status])))
+    (is (= :wrong-answer (get-in db1 [:game-phase :reason])))
     (is (s/valid? ::db/db db1))))
 
 (deftest last-tick-ends-game
-  (let [db0 (make-db {:game-phase :in-progress
-                      :time       (:time-resolution events/default-config)
-                      :current-question {:square 0 :phase :unanswered}})
+  (let [db0 (make-db {:game-phase       {:status :in-progress}
+                      :time             (:time-resolution events/default-config)
+                      :current-question {:square 0}})
         db1 (step-db db0 [:tick])]
-    (is (= :game-over (:game-phase db1)))
+    (is (= :game-over (get-in db1 [:game-phase :status])))
+    (is (= :timeout (get-in db1 [:game-phase :reason])))
     (is (s/valid? ::db/db db1))))
 
 (deftest two-correct-then-wrong-ends-game-with-score-2
@@ -74,7 +75,7 @@
         sq   (get-in db2 [:current-question :square])
         db3  (step-db db2 [:answer (if (= :light (chess/color-of sq)) :dark :light)])]
     (is (= 2 (:score db3)))
-    (is (= :game-over (:game-phase db3)))
+    (is (= :game-over (get-in db3 [:game-phase :status])))
     (is (s/valid? ::db/db db3))))
 
 ;; ── Sequence-based tests ─────────────────────────────────────────────────────
@@ -88,8 +89,8 @@
 (defn valid-step?
   "Checks phase-machine and score invariants across a single transition."
   [[event before after]]
-  (let [bp (:game-phase before)
-        ap (:game-phase after)]
+  (let [bp (get-in before [:game-phase :status])
+        ap (get-in after  [:game-phase :status])]
     (and
       ;; :not-started can never transition directly to :game-over
       (not= [bp ap] [:not-started :game-over])
@@ -115,17 +116,13 @@
 (def score-gen  gen/nat)
 (def time-resolution (get-in events/default-config [:time-resolution]))
 (def answer-gen (gen/elements [:light :dark]))
-
-(def question-gen
-  (gen/let [square square-gen
-            phase  (gen/elements [:unanswered :incorrect])]
-    {:square square :phase phase}))
+(def reason-gen (gen/elements [:timeout :wrong-answer]))
 
 (def not-started-db-gen
   (gen/let [score   score-gen
             time    (gen/choose 0 20000)
             lockout gen/small-integer]
-    (make-db {:game-phase        :not-started
+    (make-db {:game-phase        {:status :not-started}
               :score             score
               :time              time
               :lockout-remaining lockout})))
@@ -135,22 +132,23 @@
             time    (gen/choose 1 20000)
             lockout gen/small-integer
             square  square-gen]
-    (make-db {:game-phase        :in-progress
+    (make-db {:game-phase        {:status :in-progress}
               :score             score
               :time              time
               :lockout-remaining lockout
-              :current-question  {:square square :phase :unanswered}})))
+              :current-question  {:square square}})))
 
 (def game-over-db-gen
-  (gen/let [score    score-gen
-            time     gen/small-integer
-            lockout  gen/small-integer
-            question question-gen]
-    (make-db {:game-phase        :game-over
+  (gen/let [score   score-gen
+            time    gen/small-integer
+            lockout gen/small-integer
+            square  square-gen
+            reason  reason-gen]
+    (make-db {:game-phase        {:status :game-over :reason reason}
               :score             score
               :time              time
               :lockout-remaining lockout
-              :current-question  question})))
+              :current-question  {:square square}})))
 
 (def any-db-gen
   (gen/one-of [not-started-db-gen in-progress-db-gen game-over-db-gen]))
@@ -177,18 +175,13 @@
 
 (defspec new-question-square-is-valid
   (prop/for-all [square square-gen]
-    (let [db     (make-db {:current-question {:square square :phase :unanswered}})
+    (let [db     (make-db {:current-question {:square square}})
           new-sq (get-in (events/pose-new-question db) [:current-question :square])]
       (<= 0 new-sq 63))))
 
-(defspec new-question-phase-is-unanswered
-  (prop/for-all [square square-gen]
-    (let [db (make-db {:current-question {:square square :phase :unanswered}})]
-      (= :unanswered (get-in (events/pose-new-question db) [:current-question :phase])))))
-
 (defspec new-question-differs-from-previous
   (prop/for-all [square square-gen]
-    (let [db (make-db {:current-question {:square square :phase :unanswered}})]
+    (let [db (make-db {:current-question {:square square}})]
       (not= square (get-in (events/pose-new-question db) [:current-question :square])))))
 
 ;; ── handle-answer ────────────────────────────────────────────────────────────
@@ -201,10 +194,11 @@
 
 (defspec wrong-answer-ends-game
   (prop/for-all [db in-progress-db-gen]
-    (let [square     (get-in db [:current-question :square])
-          wrong      (if (= :light (chess/color-of square)) :dark :light)
-          new-db     (events/handle-answer db [:answer wrong])]
-      (= :game-over (:game-phase new-db)))))
+    (let [square (get-in db [:current-question :square])
+          wrong  (if (= :light (chess/color-of square)) :dark :light)
+          new-db (events/handle-answer db [:answer wrong])]
+      (and (= :game-over  (get-in new-db [:game-phase :status]))
+           (= :wrong-answer (get-in new-db [:game-phase :reason]))))))
 
 (defspec answer-noop-when-not-in-progress
   (prop/for-all [db     not-in-progress-db-gen
@@ -217,21 +211,23 @@
   (prop/for-all [db (gen/let [score  score-gen
                               extra  gen/nat
                               square square-gen]
-                      (make-db {:game-phase       :in-progress
+                      (make-db {:game-phase       {:status :in-progress}
                                 :score            score
                                 :time             (+ time-resolution extra 1)
-                                :current-question {:square square :phase :unanswered}}))]
+                                :current-question {:square square}}))]
     (= (:time (events/handle-tick db))
        (- (:time db) time-resolution))))
 
 (defspec tick-ends-game-when-time-expires
   (prop/for-all [db (gen/let [score  score-gen
                               square square-gen]
-                      (make-db {:game-phase       :in-progress
+                      (make-db {:game-phase       {:status :in-progress}
                                 :score            score
                                 :time             time-resolution
-                                :current-question {:square square :phase :unanswered}}))]
-    (= :game-over (:game-phase (events/handle-tick db)))))
+                                :current-question {:square square}}))]
+    (let [new-db (events/handle-tick db)]
+      (and (= :game-over (get-in new-db [:game-phase :status]))
+           (= :timeout   (get-in new-db [:game-phase :reason]))))))
 
 (defspec tick-does-not-change-score
   (prop/for-all [db in-progress-db-gen]

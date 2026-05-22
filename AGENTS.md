@@ -97,12 +97,13 @@ keyboard / button clicks
 ### App-db shape
 
 ```clojure
-{:game-phase        :not-started | :in-progress | :game-over
+{:game-phase        {:status :not-started | :in-progress | :game-over
+                     :reason :timeout | :wrong-answer}  ; :reason present only when :game-over
  :score             int
  :time              ms-remaining (counts down from config :time-to-solve)
  :lockout-remaining ms-remaining-in-post-game-lockout
  :clock             JS interval handle
- :current-question  {:square int (0–63), :phase :unanswered | :incorrect}
+ :current-question  {:square int (0–63)}  ; present once a game has started
  :config            {:time-to-solve 20000, :time-resolution 100, :lockout-duration 500}
  :panel             :main   ; active keymap panel
  :hotkeys           {:main {:keydown {"l" [:answer :light]
