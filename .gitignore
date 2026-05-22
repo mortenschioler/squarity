@@ -6,3 +6,4 @@ public/js/**
 public/css/tailwind.css
 .calva
 out/
+.clj-kondo/imports

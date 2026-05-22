@@ -1,5 +1,7 @@
 # `squarity`: A simple chess vision trainer
 
+> ⚠️ NEW: I'm working together with Claude Code in this repo to improve my co-agentic workflow. It's been a pleasure so far.
+
 > ⚠️ This application is still in pre-release, i.e. it is not yet available in a finished state.
 
 The application can be accessed at https://squarity.azurewebsites.net/.
