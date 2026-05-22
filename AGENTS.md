@@ -62,8 +62,17 @@ For exploratory expressions, use a `(comment ...)` block inside `squarity.dev` a
 After every edit to `src/`:
 
 1. **Lint** — `bin/lint`. Fix all warnings before proceeding; none are acceptable to leave.
-2. **Test** — `npx shadow-cljs compile test && node out/test.js`. Run before committing.
-3. **Screenshot** — `bin/screenshot` after UI changes. Drive the app to the relevant state via `bin/repl` first so the screenshot reflects real runtime state, not just initial load.
+2. **Screenshot** — `bin/screenshot` after UI changes. Drive the app to the relevant state via `bin/repl` first so the screenshot reflects real runtime state, not just initial load.
+3. **Test** — Must run before every commit; may run at any point during development when useful. Two ways:
+   - **Via REPL** (fast, interactive — preferred during development):
+     ```clojure
+     (squarity.test-runner/run)
+     ```
+     `squarity.test-runner` is required by `squarity.dev` and kept current by hot-reload. To add a new test namespace, add it to both the `:require` and the `run-tests` call in `squarity.test-runner`.
+   - **Via Node** (canonical, used in CI):
+     ```bash
+     npx shadow-cljs compile test && node out/test.js
+     ```
 
 Do not wait to be asked for any of these.
 
@@ -110,6 +119,17 @@ keyboard / button clicks
 - `game/views.cljs` — Reagent components. `board-svg` renders an 8×8 SVG using a 0–8 viewBox (each square is 1 unit). Tailwind classes for square colors are in `square-classes`.
 - `effects.cljs` — registers the `:log` Re-Frame effect (just `println`).
 - `core.cljs` — mounts the app, fires `:init-db`, and wires the global `keydown` listener.
+
+### Extending :config
+
+All tunable runtime values (durations, thresholds, counts) must live in `app-db`'s `:config` map — never hardcoded in views or subscription bodies. To add a new config value:
+
+1. Add it to `default-config` in `events.cljs` (the map merged into `app-db` on `:init-db`).
+2. Add its spec to `::config` in `db.cljs`.
+3. If not already present, add a `:config` subscription in `subs.cljs`.
+4. In any subscription that uses the value, add it as a `:<-` input signal rather than reading `app-db` directly.
+
+This keeps the UI layer pure and ensures the value is a reactive input signal — components re-render when it changes.
 
 ### Adding a hotkey
 
